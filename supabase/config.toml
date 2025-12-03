@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.vibe-score]
 verify_jwt = false
+
+[functions.recommended-events]
+verify_jwt = false

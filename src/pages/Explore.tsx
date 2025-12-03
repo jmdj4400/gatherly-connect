@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, Calendar, X, SlidersHorizontal, Map, List } from 'lucide-react';
+import { Search, MapPin, Calendar, X, SlidersHorizontal, Map, List, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { EventCard } from '@/components/events/EventCard';
+import { RecommendedEventCard } from '@/components/events/RecommendedEventCard';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { GlassCard } from '@/components/ui/glass-card';
 import { StaggerContainer, StaggerItem, buttonTapVariants } from '@/components/ui/page-transition';
 import { SkeletonLoader, PageLoader } from '@/components/ui/loading-spinner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
+import { useRecommendedEvents } from '@/hooks/useRecommendedEvents';
 
 const CATEGORIES = [
   { id: 'all', label: 'All', emoji: '✨' },
@@ -37,12 +40,20 @@ interface Event {
 }
 
 export default function Explore() {
-  const { profile } = useAuth();
+  const navigate = useNavigate();
+  const { user, profile } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [showForYou, setShowForYou] = useState(true);
+
+  const { 
+    recommendations, 
+    loading: recommendationsLoading, 
+    logClick 
+  } = useRecommendedEvents(6);
 
   useEffect(() => {
     fetchEvents();
@@ -168,7 +179,61 @@ export default function Explore() {
       </header>
 
       {/* Content */}
-      <main className="p-4">
+      <main className="p-4 space-y-6">
+        {/* For You Section - only show for logged in users */}
+        {user && showForYou && recommendations.length > 0 && selectedCategory === 'all' && !searchQuery && (
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center">
+                  <Sparkles className="h-4 w-4 text-white" />
+                </div>
+                <div>
+                  <h2 className="font-semibold">For You</h2>
+                  <p className="text-xs text-muted-foreground">Personalized recommendations</p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowForYou(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            {recommendationsLoading ? (
+              <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4">
+                {[1, 2, 3].map((i) => (
+                  <GlassCard key={i} className="min-w-[280px] p-4">
+                    <SkeletonLoader className="h-32 rounded-xl mb-3" />
+                    <SkeletonLoader variant="text" className="w-3/4 mb-2" />
+                    <SkeletonLoader variant="text" className="w-1/2" />
+                  </GlassCard>
+                ))}
+              </div>
+            ) : (
+              <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                {recommendations.map((event) => (
+                  <RecommendedEventCard
+                    key={event.id}
+                    event={event}
+                    className="min-w-[280px] max-w-[280px]"
+                    onClick={() => {
+                      logClick(event.id);
+                      navigate(`/event/${event.id}`);
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </motion.section>
+        )}
+
+        {/* All Events Section */}
         <AnimatePresence mode="wait">
           {loading ? (
             <motion.div
