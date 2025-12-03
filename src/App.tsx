@@ -12,6 +12,8 @@ import EventDetail from "./pages/EventDetail";
 import Groups from "./pages/Groups";
 import GroupChat from "./pages/GroupChat";
 import Profile from "./pages/Profile";
+import VenuePanel from "./pages/VenuePanel";
+import AttendanceView from "./pages/AttendanceView";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +35,8 @@ const App = () => (
             <Route path="/chat/:id" element={<GroupChat />} />
             <Route path="/chat" element={<Groups />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/venue" element={<VenuePanel />} />
+            <Route path="/attendance/:groupId" element={<AttendanceView />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

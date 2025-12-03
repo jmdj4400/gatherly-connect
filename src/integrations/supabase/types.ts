@@ -68,12 +68,14 @@ export type Database = {
           host_org_id: string | null
           id: string
           image_url: string | null
+          import_batch_id: string | null
           lat: number | null
           lng: number | null
           max_group_size: number | null
           source: string | null
           source_id: string | null
           starts_at: string
+          ticket_price: number | null
           title: string
           venue_name: string | null
         }
@@ -88,12 +90,14 @@ export type Database = {
           host_org_id?: string | null
           id?: string
           image_url?: string | null
+          import_batch_id?: string | null
           lat?: number | null
           lng?: number | null
           max_group_size?: number | null
           source?: string | null
           source_id?: string | null
           starts_at: string
+          ticket_price?: number | null
           title: string
           venue_name?: string | null
         }
@@ -108,16 +112,74 @@ export type Database = {
           host_org_id?: string | null
           id?: string
           image_url?: string | null
+          import_batch_id?: string | null
           lat?: number | null
           lng?: number | null
           max_group_size?: number | null
           source?: string | null
           source_id?: string | null
           starts_at?: string
+          ticket_price?: number | null
           title?: string
           venue_name?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "events_host_org_id_fkey"
+            columns: ["host_org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_import_batch_id_fkey"
+            columns: ["import_batch_id"]
+            isOneToOne: false
+            referencedRelation: "import_batches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_batches: {
+        Row: {
+          created_at: string | null
+          error_count: number | null
+          filename: string | null
+          id: string
+          org_id: string
+          row_count: number | null
+          status: string | null
+          success_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_count?: number | null
+          filename?: string | null
+          id?: string
+          org_id: string
+          row_count?: number | null
+          status?: string | null
+          success_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          error_count?: number | null
+          filename?: string | null
+          id?: string
+          org_id?: string
+          row_count?: number | null
+          status?: string | null
+          success_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_batches_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -235,6 +297,33 @@ export type Database = {
           },
         ]
       }
+      orgs: {
+        Row: {
+          contact_email: string | null
+          created_at: string | null
+          id: string
+          name: string
+          stripe_customer_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          contact_email?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+          stripe_customer_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          contact_email?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          stripe_customer_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -280,15 +369,46 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          org_id: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          org_id?: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          org_id?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _org_id?: string
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "org_admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -415,6 +535,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "org_admin", "user"],
+    },
   },
 } as const

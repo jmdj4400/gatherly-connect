@@ -2,3 +2,12 @@ project_id = "yuabwnhulzhnoyvnvqrw"
 
 [functions.join-event]
 verify_jwt = false
+
+[functions.csv-import]
+verify_jwt = false
+
+[functions.attendance]
+verify_jwt = false
+
+[functions.org-management]
+verify_jwt = false
