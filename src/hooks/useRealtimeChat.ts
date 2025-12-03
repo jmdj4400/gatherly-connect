@@ -2,6 +2,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { createLogger, trackAnalytics, AnalyticsEvents } from '@/lib/logger';
+
+const logger = createLogger('RealtimeChat');
 
 export interface Message {
   id: string;
@@ -53,7 +56,7 @@ export function useRealtimeChat({ groupId, userId, userDisplayName, userAvatarUr
 
   // Fetch initial messages
   const fetchMessages = useCallback(async () => {
-    console.log('[RealtimeChat] Fetching messages for group:', groupId);
+    logger.debug('Fetching messages', { groupId });
     const { data, error } = await supabase
       .from('messages')
       .select(`
@@ -71,12 +74,12 @@ export function useRealtimeChat({ groupId, userId, userDisplayName, userAvatarUr
       .order('created_at', { ascending: true });
 
     if (error) {
-      console.error('[RealtimeChat] Error fetching messages:', error);
+      logger.error('Error fetching messages', error, { groupId });
       return;
     }
 
     if (data) {
-      console.log('[RealtimeChat] Fetched', data.length, 'messages');
+      logger.info('Messages fetched', { groupId, count: data.length });
       setMessages(data as unknown as Message[]);
     }
   }, [groupId]);
@@ -183,15 +186,17 @@ export function useRealtimeChat({ groupId, userId, userDisplayName, userAvatarUr
   // Send message with moderation
   const sendMessage = useCallback(async (content: string): Promise<{ success: boolean; error?: string }> => {
     if (isFrozen) {
+      trackAnalytics(AnalyticsEvents.MESSAGE_BLOCKED, { reason: 'frozen', groupId });
       return { success: false, error: 'This group has been frozen by an administrator.' };
     }
 
     if (isMuted && muteExpiresAt) {
       const minutesLeft = Math.ceil((muteExpiresAt.getTime() - Date.now()) / 60000);
+      trackAnalytics(AnalyticsEvents.MESSAGE_BLOCKED, { reason: 'muted', groupId });
       return { success: false, error: `You are muted for ${minutesLeft} more minutes.` };
     }
 
-    console.log('[RealtimeChat] Sending message:', content.substring(0, 50));
+    logger.debug('Sending message', { groupId, contentLength: content.length });
 
     try {
       // Get auth token
@@ -214,7 +219,8 @@ export function useRealtimeChat({ groupId, userId, userDisplayName, userAvatarUr
       const moderationResult = await moderationResponse.json();
 
       if (!moderationResult.allowed) {
-        console.log('[RealtimeChat] Message blocked:', moderationResult.reason);
+        logger.warn('Message blocked by moderation', { groupId, reason: moderationResult.reason });
+        trackAnalytics(AnalyticsEvents.MESSAGE_BLOCKED, { reason: 'moderation', groupId });
         return { success: false, error: moderationResult.message };
       }
 
@@ -229,7 +235,7 @@ export function useRealtimeChat({ groupId, userId, userDisplayName, userAvatarUr
         });
 
       if (error) {
-        console.error('[RealtimeChat] Error inserting message:', error);
+        logger.error('Error inserting message', error, { groupId });
         return { success: false, error: 'Failed to send message' };
       }
 
@@ -243,9 +249,10 @@ export function useRealtimeChat({ groupId, userId, userDisplayName, userAvatarUr
         });
       }
 
+      trackAnalytics(AnalyticsEvents.MESSAGE_SENT, { groupId });
       return { success: true };
     } catch (error) {
-      console.error('[RealtimeChat] Send error:', error);
+      logger.error('Send error', error, { groupId });
       return { success: false, error: 'Network error' };
     }
   }, [groupId, userId, userDisplayName, userAvatarUrl, isFrozen, isMuted, muteExpiresAt]);
@@ -254,7 +261,7 @@ export function useRealtimeChat({ groupId, userId, userDisplayName, userAvatarUr
   useEffect(() => {
     if (!groupId || !userId) return;
 
-    console.log('[RealtimeChat] Setting up realtime subscriptions');
+    logger.info('Setting up realtime subscriptions', { groupId, userId });
     
     fetchMessages();
     checkGroupStatus();
@@ -272,7 +279,7 @@ export function useRealtimeChat({ groupId, userId, userDisplayName, userAvatarUr
           filter: `group_id=eq.${groupId}`,
         },
         async (payload) => {
-          console.log('[RealtimeChat] New message received:', payload.new.id);
+          logger.debug('New message received', { messageId: payload.new.id });
           
           // Fetch complete message with profile
           const { data } = await supabase
@@ -301,7 +308,7 @@ export function useRealtimeChat({ groupId, userId, userDisplayName, userAvatarUr
         }
       )
       .subscribe((status) => {
-        console.log('[RealtimeChat] Message channel status:', status);
+        logger.debug('Message channel status', { status });
         setIsConnected(status === 'SUBSCRIBED');
         setIsOffline(status === 'CHANNEL_ERROR' || status === 'TIMED_OUT');
       });
@@ -320,7 +327,7 @@ export function useRealtimeChat({ groupId, userId, userDisplayName, userAvatarUr
     presenceChannel
       .on('presence', { event: 'sync' }, () => {
         const state = presenceChannel.presenceState();
-        console.log('[RealtimeChat] Presence sync:', state);
+        logger.debug('Presence sync', { userCount: Object.keys(state).length });
         
         const typing: TypingUser[] = [];
         Object.entries(state).forEach(([key, presences]) => {
@@ -337,11 +344,11 @@ export function useRealtimeChat({ groupId, userId, userDisplayName, userAvatarUr
         });
         setTypingUsers(typing);
       })
-      .on('presence', { event: 'join' }, ({ key, newPresences }) => {
-        console.log('[RealtimeChat] User joined:', key);
+      .on('presence', { event: 'join' }, ({ key }) => {
+        logger.debug('User joined', { userId: key });
       })
-      .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-        console.log('[RealtimeChat] User left:', key);
+      .on('presence', { event: 'leave' }, ({ key }) => {
+        logger.debug('User left', { userId: key });
         setTypingUsers((prev) => prev.filter(u => u.id !== key));
       })
       .subscribe(async (status) => {
@@ -360,7 +367,7 @@ export function useRealtimeChat({ groupId, userId, userDisplayName, userAvatarUr
     presenceChannelRef.current = presenceChannel;
 
     return () => {
-      console.log('[RealtimeChat] Cleaning up subscriptions');
+      logger.debug('Cleaning up subscriptions', { groupId });
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
       }
