@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Settings, LogOut, Edit2, MapPin, Zap, Heart, Building2, Shield, ChevronRight } from 'lucide-react';
+import { Settings, LogOut, Edit2, MapPin, Zap, Heart, Building2, Shield, ChevronRight, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,8 @@ import { StaggerContainer, StaggerItem, buttonTapVariants } from '@/components/u
 import { PageLoader } from '@/components/ui/loading-spinner';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { useAuth } from '@/lib/auth';
+import { useToast } from '@/hooks/use-toast';
+import { subscribeToPush, requestNotificationPermission, showLocalNotification } from '@/lib/notifications';
 
 const INTEREST_EMOJIS: Record<string, string> = {
   music: '🎵',
@@ -36,10 +38,54 @@ const ENERGY_LABELS: Record<number, { label: string; emoji: string; color: strin
 export default function Profile() {
   const navigate = useNavigate();
   const { user, profile, signOut, loading } = useAuth();
+  const { toast } = useToast();
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
+  };
+
+  const handleTestNotification = async () => {
+    if (!user) return;
+    
+    // First request permission
+    const permission = await requestNotificationPermission();
+    console.log('[Profile] Notification permission:', permission);
+    
+    if (permission !== 'granted') {
+      toast({
+        title: "Notifikationer ikke tilladt",
+        description: "Aktivér venligst notifikationer i din browser",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Try to subscribe
+    const subscribed = await subscribeToPush(user.id);
+    console.log('[Profile] Subscribe result:', subscribed);
+    
+    if (subscribed) {
+      toast({
+        title: "Abonnement aktiveret!",
+        description: "Du modtager nu push notifikationer"
+      });
+      
+      // Show a local test notification
+      await showLocalNotification('Test Notifikation 🎉', {
+        body: 'Hvis du ser dette, virker notifikationer!',
+      });
+    } else {
+      // Try local notification anyway
+      await showLocalNotification('Test Notifikation 🎉', {
+        body: 'Lokal notifikation virker!',
+      });
+      
+      toast({
+        title: "Delvist aktiveret",
+        description: "Lokale notifikationer virker, men push-abonnement fejlede"
+      });
+    }
   };
 
   if (loading) {
@@ -186,6 +232,7 @@ export default function Profile() {
           <StaggerItem>
             <div className="mt-6 space-y-2">
               {[
+                { icon: Bell, label: 'Test Notifikation', onClick: handleTestNotification },
                 { icon: Edit2, label: 'Edit Profile', onClick: () => navigate('/onboarding') },
                 { icon: Building2, label: 'Venue Panel', onClick: () => navigate('/venue') },
                 { icon: Shield, label: 'Report Center', onClick: () => navigate('/admin/reports') },
