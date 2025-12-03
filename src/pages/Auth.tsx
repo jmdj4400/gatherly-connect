@@ -63,11 +63,22 @@ export default function Auth() {
         }
       }
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Something went wrong",
-        variant: "destructive"
-      });
+      const errorMessage = error.message || "Something went wrong";
+      
+      // Check for network errors
+      if (errorMessage.includes('Load failed') || errorMessage.includes('fetch') || errorMessage.includes('network')) {
+        toast({
+          title: "Netværksfejl",
+          description: "Kunne ikke oprette forbindelse til serveren. Prøv igen om et øjeblik.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Fejl",
+          description: errorMessage,
+          variant: "destructive"
+        });
+      }
     } finally {
       setLoading(false);
     }
