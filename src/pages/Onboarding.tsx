@@ -45,6 +45,16 @@ export default function Onboarding() {
   const handleNext = async () => {
     if (currentStep === 'location') {
       // Save and finish
+      if (!user?.id) {
+        toast({
+          title: "Not signed in",
+          description: "Please sign in to complete setup",
+          variant: "destructive"
+        });
+        navigate('/auth');
+        return;
+      }
+      
       setSaving(true);
       try {
         const { error } = await supabase
@@ -56,7 +66,7 @@ export default function Onboarding() {
             radius_km: radiusKm,
             onboarding_completed: true
           })
-          .eq('id', user?.id);
+          .eq('id', user.id);
 
         if (error) throw error;
 

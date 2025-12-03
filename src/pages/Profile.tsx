@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Settings, LogOut, Edit2, MapPin, Zap, Heart } from 'lucide-react';
+import { Settings, LogOut, Edit2, MapPin, Zap, Heart, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -205,6 +205,15 @@ export default function Profile() {
           >
             <Edit2 className="mr-3 h-5 w-5" />
             Edit Profile
+          </Button>
+
+          <Button
+            variant="outline"
+            className="w-full justify-start h-12"
+            onClick={() => navigate('/venue')}
+          >
+            <Building2 className="mr-3 h-5 w-5" />
+            Venue Panel
           </Button>
           
           <Button
