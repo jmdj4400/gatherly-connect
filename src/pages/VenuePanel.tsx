@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { 
   Building2, Upload, Calendar, Users, Download, 
   ArrowLeft, Plus, FileSpreadsheet, Check, X, 
-  AlertCircle, Trash2, Eye, QrCode
+  AlertCircle, Trash2, Eye, QrCode, TrendingDown, BarChart3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -89,6 +89,14 @@ export default function VenuePanel() {
   const [csvSummary, setCsvSummary] = useState<any>(null);
   const [importing, setImporting] = useState(false);
 
+  // Venue Stats
+  const [stats, setStats] = useState<{
+    totalEvents: number;
+    totalAttendees: number;
+    totalJoined: number;
+    noShowRate: number;
+  } | null>(null);
+
   useEffect(() => {
     if (user) {
       fetchOrgs();
@@ -98,6 +106,7 @@ export default function VenuePanel() {
   useEffect(() => {
     if (selectedOrg) {
       fetchOrgEvents();
+      fetchStats();
       fetchImports();
     }
   }, [selectedOrg]);
@@ -163,6 +172,30 @@ export default function VenuePanel() {
       setImports(data.imports || []);
     } catch (error) {
       console.error('Error fetching imports:', error);
+    }
+  };
+
+  const fetchStats = async () => {
+    if (!selectedOrg) return;
+    try {
+      const token = await getAccessToken();
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/attendance?action=export&org_id=${selectedOrg.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      const data = await response.json();
+      if (data.summary) {
+        setStats({
+          totalEvents: data.summary.total_events || 0,
+          totalAttendees: data.summary.total_attended || 0,
+          totalJoined: data.summary.total_joined || 0,
+          noShowRate: data.summary.overall_no_show_rate || 0
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error);
     }
   };
 
@@ -416,6 +449,44 @@ export default function VenuePanel() {
         </div>
       ) : (
         <div className="p-6 space-y-6">
+          {/* Venue Stats */}
+          {stats && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="grid grid-cols-4 gap-4"
+            >
+              <Card>
+                <CardContent className="pt-4 text-center">
+                  <Calendar className="h-6 w-6 mx-auto text-primary mb-1" />
+                  <p className="text-2xl font-bold">{stats.totalEvents}</p>
+                  <p className="text-xs text-muted-foreground">Total Events</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-4 text-center">
+                  <Users className="h-6 w-6 mx-auto text-primary mb-1" />
+                  <p className="text-2xl font-bold">{stats.totalJoined}</p>
+                  <p className="text-xs text-muted-foreground">Registered</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-4 text-center">
+                  <Check className="h-6 w-6 mx-auto text-green-500 mb-1" />
+                  <p className="text-2xl font-bold">{stats.totalAttendees}</p>
+                  <p className="text-xs text-muted-foreground">Attended</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-4 text-center">
+                  <TrendingDown className="h-6 w-6 mx-auto text-red-500 mb-1" />
+                  <p className="text-2xl font-bold">{Math.round(stats.noShowRate * 100)}%</p>
+                  <p className="text-xs text-muted-foreground">No-Show Rate</p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
           {/* Quick Actions */}
           <div className="grid grid-cols-2 gap-4">
             <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
