@@ -1,20 +1,22 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Check, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Sparkles, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { InterestsStep } from '@/components/onboarding/InterestsStep';
 import { SocialEnergyStep } from '@/components/onboarding/SocialEnergyStep';
 import { LocationStep } from '@/components/onboarding/LocationStep';
+import { NotificationsStep } from '@/components/onboarding/NotificationsStep';
 import { GlassCard } from '@/components/ui/glass-card';
 import { buttonTapVariants } from '@/components/ui/page-transition';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { recomputeEmbedding } from '@/hooks/useVibeScore';
 
-const STEPS = ['interests', 'energy', 'location'] as const;
+const STEPS = ['interests', 'energy', 'location', 'notifications'] as const;
 type Step = typeof STEPS[number];
 
 const stepInfo = {
@@ -32,6 +34,11 @@ const stepInfo = {
     title: 'Where are you?',
     subtitle: "We'll show you events happening nearby",
     icon: '📍',
+  },
+  notifications: {
+    title: 'Stay connected',
+    subtitle: 'Get notified about your groups and events',
+    icon: '🔔',
   },
 };
 
@@ -75,6 +82,8 @@ export default function Onboarding() {
         return socialEnergy >= 1;
       case 'location':
         return city.trim().length > 0;
+      case 'notifications':
+        return true; // Always can proceed
       default:
         return false;
     }
@@ -107,14 +116,13 @@ export default function Onboarding() {
 
         if (error) throw error;
 
+        // Recompute embedding with new profile data
+        await recomputeEmbedding();
         await refreshProfile();
         
-        toast({
-          title: "You're all set! 🎉",
-          description: "Your profile is ready. Start exploring events!"
-        });
-        
-        navigate('/');
+        // Move to notifications step
+        setDirection(1);
+        setCurrentStep('notifications');
       } catch (error: any) {
         toast({
           title: "Error saving profile",
@@ -124,6 +132,13 @@ export default function Onboarding() {
       } finally {
         setSaving(false);
       }
+    } else if (currentStep === 'notifications') {
+      // Final step - go to home
+      toast({
+        title: "You're all set! 🎉",
+        description: "Your profile is ready. Start exploring events!"
+      });
+      navigate('/');
     } else {
       setDirection(1);
       const nextIndex = stepIndex + 1;
@@ -220,54 +235,59 @@ export default function Onboarding() {
                 onRadiusChange={setRadiusKm}
               />
             )}
+            {currentStep === 'notifications' && (
+              <NotificationsStep onComplete={handleNext} />
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
 
       {/* Footer */}
-      <div className="p-6 border-t bg-card/50 backdrop-blur-sm">
-        <motion.div
-          variants={buttonTapVariants}
-          initial="initial"
-          whileTap="tap"
-        >
-          <Button
-            className="w-full h-14 text-lg font-semibold shadow-lg shadow-primary/20"
-            onClick={handleNext}
-            disabled={!canProceed() || saving}
+      {currentStep !== 'notifications' && (
+        <div className="p-6 border-t bg-card/50 backdrop-blur-sm">
+          <motion.div
+            variants={buttonTapVariants}
+            initial="initial"
+            whileTap="tap"
           >
-            {saving ? (
-              <div className="flex items-center gap-2">
-                <LoadingSpinner size="sm" />
-                <span>Saving...</span>
-              </div>
-            ) : currentStep === 'location' ? (
-              <>
-                <Sparkles className="mr-2 h-5 w-5" />
-                Complete Setup
-              </>
-            ) : (
-              <>
-                Continue
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </>
-            )}
-          </Button>
-        </motion.div>
-        
-        {/* Skip option for first steps */}
-        {currentStep !== 'location' && (
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="w-full mt-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            onClick={handleNext}
-            disabled={saving}
-          >
-            Skip for now
-          </motion.button>
-        )}
-      </div>
+            <Button
+              className="w-full h-14 text-lg font-semibold shadow-lg shadow-primary/20"
+              onClick={handleNext}
+              disabled={!canProceed() || saving}
+            >
+              {saving ? (
+                <div className="flex items-center gap-2">
+                  <LoadingSpinner size="sm" />
+                  <span>Saving...</span>
+                </div>
+              ) : currentStep === 'location' ? (
+                <>
+                  <Bell className="mr-2 h-5 w-5" />
+                  Continue to Notifications
+                </>
+              ) : (
+                <>
+                  Continue
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </>
+              )}
+            </Button>
+          </motion.div>
+          
+          {/* Skip option for first steps */}
+          {currentStep !== 'location' && (
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="w-full mt-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              onClick={handleNext}
+              disabled={saving}
+            >
+              Skip for now
+            </motion.button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
