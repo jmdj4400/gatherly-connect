@@ -266,6 +266,9 @@ export type Database = {
         Row: {
           created_at: string | null
           event_id: string
+          frozen: boolean | null
+          frozen_at: string | null
+          frozen_by: string | null
           id: string
           meet_spot: string | null
           meet_time: string | null
@@ -274,6 +277,9 @@ export type Database = {
         Insert: {
           created_at?: string | null
           event_id: string
+          frozen?: boolean | null
+          frozen_at?: string | null
+          frozen_by?: string | null
           id?: string
           meet_spot?: string | null
           meet_time?: string | null
@@ -282,6 +288,9 @@ export type Database = {
         Update: {
           created_at?: string | null
           event_id?: string
+          frozen?: boolean | null
+          frozen_at?: string | null
+          frozen_by?: string | null
           id?: string
           meet_spot?: string | null
           meet_time?: string | null
@@ -368,6 +377,134 @@ export type Database = {
           verified?: boolean | null
         }
         Relationships: []
+      }
+      reports: {
+        Row: {
+          created_at: string | null
+          group_id: string | null
+          id: string
+          message_id: string | null
+          moderation_flags: Json | null
+          reason: string
+          reported_user_id: string
+          reporter_id: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          group_id?: string | null
+          id?: string
+          message_id?: string | null
+          moderation_flags?: Json | null
+          reason: string
+          reported_user_id: string
+          reporter_id?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          group_id?: string | null
+          id?: string
+          message_id?: string | null
+          moderation_flags?: Json | null
+          reason?: string
+          reported_user_id?: string
+          reporter_id?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "micro_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_bans: {
+        Row: {
+          banned_by: string | null
+          banned_until: string | null
+          created_at: string | null
+          id: string
+          permanent: boolean | null
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          banned_by?: string | null
+          banned_until?: string | null
+          created_at?: string | null
+          id?: string
+          permanent?: boolean | null
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          banned_by?: string | null
+          banned_until?: string | null
+          created_at?: string | null
+          id?: string
+          permanent?: boolean | null
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_mutes: {
+        Row: {
+          created_at: string | null
+          group_id: string
+          id: string
+          muted_by: string | null
+          muted_until: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          group_id: string
+          id?: string
+          muted_by?: string | null
+          muted_until: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          group_id?: string
+          id?: string
+          muted_by?: string | null
+          muted_until?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_mutes_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "micro_groups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
