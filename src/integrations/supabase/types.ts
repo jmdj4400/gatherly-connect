@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      event_assets: {
+        Row: {
+          asset_type: string
+          created_at: string
+          event_id: string
+          id: string
+          image_url: string
+          updated_at: string
+        }
+        Insert: {
+          asset_type: string
+          created_at?: string
+          event_id: string
+          id?: string
+          image_url: string
+          updated_at?: string
+        }
+        Update: {
+          asset_type?: string
+          created_at?: string
+          event_id?: string
+          id?: string
+          image_url?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_assets_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_participants: {
         Row: {
           event_id: string
@@ -74,6 +109,11 @@ export type Database = {
           lat: number | null
           lng: number | null
           max_group_size: number | null
+          organizer_logo_url: string | null
+          parent_event_id: string | null
+          recurrence_day: number | null
+          recurrence_time: string | null
+          recurrence_type: string | null
           source: string | null
           source_id: string | null
           starts_at: string
@@ -98,6 +138,11 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           max_group_size?: number | null
+          organizer_logo_url?: string | null
+          parent_event_id?: string | null
+          recurrence_day?: number | null
+          recurrence_time?: string | null
+          recurrence_type?: string | null
           source?: string | null
           source_id?: string | null
           starts_at: string
@@ -122,6 +167,11 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           max_group_size?: number | null
+          organizer_logo_url?: string | null
+          parent_event_id?: string | null
+          recurrence_day?: number | null
+          recurrence_time?: string | null
+          recurrence_type?: string | null
           source?: string | null
           source_id?: string | null
           starts_at?: string
@@ -142,6 +192,13 @@ export type Database = {
             columns: ["import_batch_id"]
             isOneToOne: false
             referencedRelation: "import_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_parent_event_id_fkey"
+            columns: ["parent_event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
         ]

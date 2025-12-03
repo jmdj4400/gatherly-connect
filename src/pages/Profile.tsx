@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Settings, LogOut, Edit2, MapPin, Zap, Heart, Building2, Shield, ChevronRight, Bell } from 'lucide-react';
+import { Settings, LogOut, Edit2, MapPin, Zap, Heart, Building2, Shield, ChevronRight, Bell, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -233,6 +233,7 @@ export default function Profile() {
             <div className="mt-6 space-y-2">
               {[
                 { icon: Bell, label: 'Test Notifikation', onClick: handleTestNotification },
+                { icon: Calendar, label: 'Organizer Events', onClick: () => navigate('/organizer/events') },
                 { icon: Edit2, label: 'Edit Profile', onClick: () => navigate('/onboarding') },
                 { icon: Building2, label: 'Venue Panel', onClick: () => navigate('/venue') },
                 { icon: Shield, label: 'Report Center', onClick: () => navigate('/admin/reports') },
