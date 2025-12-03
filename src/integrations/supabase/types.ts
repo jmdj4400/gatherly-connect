@@ -219,25 +219,37 @@ export type Database = {
       }
       event_participants: {
         Row: {
+          attendance_at: string | null
+          attendance_status: string | null
+          cancelled_at: string | null
           event_id: string
           feedback: Json | null
           id: string
+          join_status: string | null
           joined_at: string | null
           status: string | null
           user_id: string
         }
         Insert: {
+          attendance_at?: string | null
+          attendance_status?: string | null
+          cancelled_at?: string | null
           event_id: string
           feedback?: Json | null
           id?: string
+          join_status?: string | null
           joined_at?: string | null
           status?: string | null
           user_id: string
         }
         Update: {
+          attendance_at?: string | null
+          attendance_status?: string | null
+          cancelled_at?: string | null
           event_id?: string
           feedback?: Json | null
           id?: string
+          join_status?: string | null
           joined_at?: string | null
           status?: string | null
           user_id?: string
@@ -272,6 +284,7 @@ export type Database = {
           ends_at: string | null
           event_embedding: Json | null
           freeze_hours_before: number | null
+          freeze_override_lock: boolean | null
           host_org_id: string | null
           id: string
           image_url: string | null
@@ -303,6 +316,7 @@ export type Database = {
           ends_at?: string | null
           event_embedding?: Json | null
           freeze_hours_before?: number | null
+          freeze_override_lock?: boolean | null
           host_org_id?: string | null
           id?: string
           image_url?: string | null
@@ -334,6 +348,7 @@ export type Database = {
           ends_at?: string | null
           event_embedding?: Json | null
           freeze_hours_before?: number | null
+          freeze_override_lock?: boolean | null
           host_org_id?: string | null
           id?: string
           image_url?: string | null
@@ -979,6 +994,7 @@ export type Database = {
           id: string
           last_attendance_week: number | null
           last_attendance_year: number | null
+          last_update_hash: string | null
           longest_streak: number
           org_id: string
           updated_at: string
@@ -990,6 +1006,7 @@ export type Database = {
           id?: string
           last_attendance_week?: number | null
           last_attendance_year?: number | null
+          last_update_hash?: string | null
           longest_streak?: number
           org_id: string
           updated_at?: string
@@ -1001,6 +1018,7 @@ export type Database = {
           id?: string
           last_attendance_week?: number | null
           last_attendance_year?: number | null
+          last_update_hash?: string | null
           longest_streak?: number
           org_id?: string
           updated_at?: string
