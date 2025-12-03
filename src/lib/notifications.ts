@@ -24,6 +24,28 @@ export const requestNotificationPermission = async (): Promise<NotificationPermi
   }
 };
 
+// Fetch VAPID public key from backend
+let cachedVapidKey: string | null = null;
+
+const getVapidPublicKey = async (): Promise<string | null> => {
+  if (cachedVapidKey) return cachedVapidKey;
+  
+  try {
+    const { data, error } = await supabase.functions.invoke('get-vapid-key');
+    
+    if (error || !data?.publicKey) {
+      console.error('Failed to fetch VAPID public key:', error);
+      return null;
+    }
+    
+    cachedVapidKey = data.publicKey;
+    return cachedVapidKey;
+  } catch (error) {
+    console.error('Error fetching VAPID public key:', error);
+    return null;
+  }
+};
+
 // Subscribe to push notifications
 export const subscribeToPush = async (userId: string): Promise<boolean> => {
   if (!isNotificationSupported()) return false;
@@ -31,9 +53,13 @@ export const subscribeToPush = async (userId: string): Promise<boolean> => {
   try {
     const registration = await navigator.serviceWorker.ready;
     
-    // Get VAPID public key from environment or use a default for demo
-    const vapidPublicKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || 
-      'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U';
+    // Get VAPID public key from backend
+    const vapidPublicKey = await getVapidPublicKey();
+    
+    if (!vapidPublicKey) {
+      console.error('VAPID public key not available');
+      return false;
+    }
     
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
