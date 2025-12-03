@@ -14,6 +14,7 @@ import { subscribeToPush, requestNotificationPermission, showLocalNotification }
 import { useEngagement } from '@/hooks/useEngagement';
 import { StreakDisplay } from '@/components/engagement/StreakDisplay';
 import { BadgeGrid } from '@/components/engagement/BadgeGrid';
+import { UpgradeCTA } from '@/components/profile/UpgradeCTA';
 
 const INTEREST_EMOJIS: Record<string, string> = {
   music: '🎵',
@@ -175,6 +176,13 @@ export default function Profile() {
                 ✓ Verified
               </Badge>
             )}
+          </StaggerItem>
+
+          {/* Premium Upgrade CTA */}
+          <StaggerItem>
+            <div className="mt-4">
+              <UpgradeCTA />
+            </div>
           </StaggerItem>
 
           {/* Stats */}

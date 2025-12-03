@@ -9,15 +9,17 @@ export interface FeatureFlags {
   LLM_MATCHING: boolean;
   POSTHOG_ENABLED: boolean;
   SENTRY_ENABLED: boolean;
+  PREMIUM_AB_TEST: boolean;
 }
 
 // Default flags (all premium features off by default)
 const DEFAULT_FLAGS: FeatureFlags = {
   VENUE_BOOST: false,
-  PREMIUM_FEATURES: false,
+  PREMIUM_FEATURES: false, // Enable this to show premium page
   LLM_MATCHING: false,
   POSTHOG_ENABLED: false,
   SENTRY_ENABLED: false,
+  PREMIUM_AB_TEST: true, // A/B test is on by default
 };
 
 // Get flags from environment or localStorage override
