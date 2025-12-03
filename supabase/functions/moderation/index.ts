@@ -6,6 +6,24 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Fallback profanity wordlist when AI moderation fails
+const PROFANITY_WORDLIST = [
+  'fuck', 'shit', 'ass', 'bitch', 'damn', 'crap', 'piss', 'dick', 'cock', 
+  'pussy', 'asshole', 'bastard', 'slut', 'whore', 'nigger', 'faggot', 
+  'retard', 'kill yourself', 'kys', 'nazi', 'rape', 'molest'
+];
+
+// Check content against fallback wordlist
+function checkFallbackProfanity(content: string): { flagged: boolean; reason?: string } {
+  const lowerContent = content.toLowerCase();
+  for (const word of PROFANITY_WORDLIST) {
+    if (lowerContent.includes(word)) {
+      return { flagged: true, reason: `Contains prohibited word: ${word}` };
+    }
+  }
+  return { flagged: false };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -156,11 +174,37 @@ serve(async (req) => {
               }
             } catch (parseError) {
               console.error('[moderation] Failed to parse AI response:', parseError);
+              // Fall back to wordlist check
+              const fallbackResult = checkFallbackProfanity(content);
+              if (fallbackResult.flagged) {
+                flagged = true;
+                moderationFlags = { flagged: true, categories: ['profanity'], reason: fallbackResult.reason };
+              }
+            }
+          } else {
+            console.error('[moderation] AI API error, using fallback');
+            const fallbackResult = checkFallbackProfanity(content);
+            if (fallbackResult.flagged) {
+              flagged = true;
+              moderationFlags = { flagged: true, categories: ['profanity'], reason: fallbackResult.reason };
             }
           }
         } catch (aiError) {
           console.error('[moderation] AI moderation error:', aiError);
-          // Continue without AI moderation if it fails
+          // Use fallback wordlist
+          const fallbackResult = checkFallbackProfanity(content);
+          if (fallbackResult.flagged) {
+            flagged = true;
+            moderationFlags = { flagged: true, categories: ['profanity'], reason: fallbackResult.reason };
+          }
+        }
+      } else {
+        // No AI key, use fallback only
+        console.log('[moderation] No AI key, using fallback wordlist');
+        const fallbackResult = checkFallbackProfanity(content);
+        if (fallbackResult.flagged) {
+          flagged = true;
+          moderationFlags = { flagged: true, categories: ['profanity'], reason: fallbackResult.reason };
         }
       }
 
