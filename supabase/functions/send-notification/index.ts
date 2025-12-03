@@ -16,6 +16,34 @@ interface NotificationRequest {
   type: NotificationType;
   user_ids: string[];
   data: Record<string, string>;
+  dedupe_key?: string; // Optional key for deduplication
+}
+
+// Generate deduplication key
+function generateDedupeKey(type: NotificationType, userId: string, data: Record<string, string>): string {
+  const parts = [type, userId];
+  if (data.event_id) parts.push(data.event_id);
+  if (data.group_id) parts.push(data.group_id);
+  return parts.join(':');
+}
+
+// In-memory deduplication cache (TTL: 5 minutes)
+const sentNotifications = new Map<string, number>();
+const DEDUPE_TTL_MS = 5 * 60 * 1000;
+
+function isDuplicate(dedupeKey: string): boolean {
+  const now = Date.now();
+  // Clean expired entries
+  for (const [key, timestamp] of sentNotifications.entries()) {
+    if (now - timestamp > DEDUPE_TTL_MS) {
+      sentNotifications.delete(key);
+    }
+  }
+  return sentNotifications.has(dedupeKey);
+}
+
+function markSent(dedupeKey: string): void {
+  sentNotifications.set(dedupeKey, Date.now());
 }
 
 const NOTIFICATION_TEMPLATES: Record<NotificationType, { title: string; body: string }> = {
@@ -254,10 +282,21 @@ serve(async (req) => {
 
     let successCount = 0;
     let failedCount = 0;
+    let skippedCount = 0;
     const expiredSubscriptionIds: string[] = [];
 
-    // Send notifications to all subscriptions
+    // Send notifications to all subscriptions with deduplication
     for (const sub of subscriptions) {
+      // Generate deduplication key for this user
+      const dedupeKey = generateDedupeKey(type, sub.user_id, data);
+      
+      // Skip if duplicate
+      if (isDuplicate(dedupeKey)) {
+        skippedCount++;
+        console.log(`[send-notification] Skipped duplicate for user ${sub.user_id}`);
+        continue;
+      }
+
       const result = await sendWebPush(
         { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
         payload,
@@ -267,6 +306,7 @@ serve(async (req) => {
 
       if (result.success) {
         successCount++;
+        markSent(dedupeKey); // Mark as sent for deduplication
         console.log(`[send-notification] Sent to user ${sub.user_id}`);
       } else {
         failedCount++;
@@ -298,6 +338,7 @@ serve(async (req) => {
         success: true, 
         sent_to: successCount,
         failed: failedCount,
+        skipped_duplicates: skippedCount,
         title,
         body,
       }),

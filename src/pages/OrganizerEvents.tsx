@@ -60,7 +60,7 @@ export default function OrganizerEvents() {
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id)
-      .eq('role', 'org_admin')
+      .in('role', ['org_owner', 'org_admin', 'org_helper'])
       .maybeSingle();
     
     setIsOrgAdmin(!!data);
@@ -71,12 +71,12 @@ export default function OrganizerEvents() {
     
     setLoading(true);
     
-    // Fetch events where user is org_admin
+    // Fetch events where user has org role
     const { data: userOrgs } = await supabase
       .from('user_roles')
       .select('org_id')
       .eq('user_id', user.id)
-      .eq('role', 'org_admin');
+      .in('role', ['org_owner', 'org_admin', 'org_helper']);
 
     const orgIds = userOrgs?.map(r => r.org_id).filter(Boolean) || [];
 

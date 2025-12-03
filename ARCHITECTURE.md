@@ -210,3 +210,24 @@ Deep links: `/event/:id?autojoin=true` - Auto-triggers join flow
 ### E2E Tests (planned)
 - Cypress tests for critical user paths
 - Widget embedding verification
+
+---
+
+## Consolidation Progress
+
+### Phase 8 — Organizer Management Integration ✅
+- Edge functions use standardized error codes (E.PERM, E.ORG, etc.)
+- Billing-protected actions restricted to org_owner only
+- Audit logs with consistent formatting
+- OrganizerEvents checks all org roles (org_owner, org_admin, org_helper)
+
+### Phase 9 — Community Landing Pages + Widgets ✅
+- OG image generation for community pages
+- embed.js hardened with rate limiting (30 req/min)
+- Deep links respect freeze state (disabled autojoin when frozen)
+- Countdown widget shows "Groups Finalized" badge when frozen
+
+### Phase 10 — Push Notifications Uplift ✅
+- Deduplication logic prevents same notification twice (5-min TTL)
+- Response includes skipped_duplicates count
+- Expired subscriptions auto-cleaned on 410/404
