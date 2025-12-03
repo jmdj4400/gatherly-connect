@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Calendar, MapPin, Users, Clock, Share2, Heart } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Users, Clock, Share2, Heart, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
-import { format } from 'date-fns';
+import { format, differenceInMinutes } from 'date-fns';
 import { useVibeScore } from '@/hooks/useVibeScore';
 import { VibeScoreBadge } from '@/components/ui/vibe-score-badge';
+import { useEngagement } from '@/hooks/useEngagement';
 
 interface Event {
   id: string;
@@ -45,10 +46,13 @@ export default function EventDetail() {
   const [event, setEvent] = useState<Event | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [isJoined, setIsJoined] = useState(false);
+  const [hasCheckedIn, setHasCheckedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
+  const [checkingIn, setCheckingIn] = useState(false);
   
   const { eventVibeScore, loading: vibeLoading } = useVibeScore(id);
+  const { checkIn } = useEngagement();
 
   useEffect(() => {
     if (id) {
@@ -98,6 +102,16 @@ export default function EventDetail() {
         .single();
 
       setIsJoined(!!userParticipation);
+      
+      // Check if user has already checked in
+      const { data: attendance } = await supabase
+        .from('attendance_records')
+        .select('id')
+        .eq('event_id', id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      setHasCheckedIn(!!attendance);
     }
 
     setLoading(false);
@@ -196,6 +210,39 @@ export default function EventDetail() {
     }
   };
 
+  const handleCheckIn = async () => {
+    if (!user || !id) return;
+    
+    setCheckingIn(true);
+    try {
+      const result = await checkIn(id);
+      
+      if (result.success) {
+        setHasCheckedIn(true);
+        
+        if (result.new_badges && result.new_badges.length > 0) {
+          toast({
+            title: `Badge earned! ${result.new_badges[0].icon}`,
+            description: `You earned the ${result.new_badges[0].name} badge!`
+          });
+        } else {
+          toast({
+            title: "Checked in! ✅",
+            description: "Your attendance has been recorded."
+          });
+        }
+      }
+    } catch (error: any) {
+      toast({
+        title: "Check-in failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setCheckingIn(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -214,6 +261,8 @@ export default function EventDetail() {
   }
 
   const eventDate = new Date(event.starts_at);
+  const minutesUntilEvent = differenceInMinutes(eventDate, new Date());
+  const canCheckIn = isJoined && minutesUntilEvent <= 30 && minutesUntilEvent >= -120; // 30 min before to 2 hours after
 
   return (
     <div className="min-h-screen bg-background pb-32">
@@ -336,13 +385,33 @@ export default function EventDetail() {
         {event.allow_come_alone && (
           isJoined ? (
             <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="flex-1 h-14"
-                onClick={handleLeave}
-              >
-                Leave Event
-              </Button>
+              {canCheckIn && !hasCheckedIn ? (
+                <Button
+                  className="flex-1 h-14 font-semibold bg-green-600 hover:bg-green-700"
+                  onClick={handleCheckIn}
+                  disabled={checkingIn}
+                >
+                  <CheckCircle className="mr-2 h-5 w-5" />
+                  {checkingIn ? 'Checking in...' : 'Check In'}
+                </Button>
+              ) : hasCheckedIn ? (
+                <Button
+                  variant="outline"
+                  className="flex-1 h-14 border-green-500 text-green-600"
+                  disabled
+                >
+                  <CheckCircle className="mr-2 h-5 w-5" />
+                  Checked In ✓
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="flex-1 h-14"
+                  onClick={handleLeave}
+                >
+                  Leave Event
+                </Button>
+              )}
               <Button
                 className="flex-1 h-14 font-semibold"
                 onClick={() => navigate('/groups')}

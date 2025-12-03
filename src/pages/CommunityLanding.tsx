@@ -8,8 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { Calendar, MapPin, Users, Bell, BellOff, ChevronRight } from 'lucide-react';
+import { Calendar, MapPin, Users, Bell, BellOff, ChevronRight, Rss } from 'lucide-react';
 import { format } from 'date-fns';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Community {
   id: string;
@@ -135,6 +136,15 @@ export default function CommunityLanding() {
           .insert({ org_id: community.id, user_id: user.id });
 
         if (error) throw error;
+        
+        // Add to community feed
+        await supabase.from('community_feed').insert({
+          org_id: community.id,
+          feed_type: 'member_joined',
+          user_id: user.id,
+          metadata: {}
+        });
+        
         setIsFollowing(true);
         setFollowerCount((c) => c + 1);
         toast.success('Following community! You will get notifications for new events.');
@@ -235,7 +245,7 @@ export default function CommunityLanding() {
           </div>
 
           {/* Stats */}
-          <div className="flex gap-4 mb-6">
+          <div className="flex flex-wrap gap-4 mb-6">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Users className="h-4 w-4" />
               <span>{followerCount} followers</span>
@@ -244,6 +254,15 @@ export default function CommunityLanding() {
               <Calendar className="h-4 w-4" />
               <span>{events.length} upcoming events</span>
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-foreground"
+              onClick={() => navigate(`/c/${handle}/feed`)}
+            >
+              <Rss className="h-4 w-4 mr-1" />
+              Community Feed
+            </Button>
           </div>
 
           {/* Bio */}

@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Settings, LogOut, Edit2, MapPin, Zap, Heart, Building2, Shield, ChevronRight, Bell, Calendar, Users, Cog } from 'lucide-react';
+import { Settings, LogOut, Edit2, MapPin, Zap, Heart, Building2, Shield, ChevronRight, Bell, Calendar, Users, Cog, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,9 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
 import { subscribeToPush, requestNotificationPermission, showLocalNotification } from '@/lib/notifications';
+import { useEngagement } from '@/hooks/useEngagement';
+import { StreakDisplay } from '@/components/engagement/StreakDisplay';
+import { BadgeGrid } from '@/components/engagement/BadgeGrid';
 
 const INTEREST_EMOJIS: Record<string, string> = {
   music: '🎵',
@@ -39,6 +42,7 @@ export default function Profile() {
   const navigate = useNavigate();
   const { user, profile, signOut, loading } = useAuth();
   const { toast } = useToast();
+  const { stats: engagementStats, loading: engagementLoading } = useEngagement();
 
   const handleSignOut = async () => {
     await signOut();
@@ -177,9 +181,9 @@ export default function Profile() {
           <StaggerItem>
             <div className="grid grid-cols-3 gap-3 mt-6">
               {[
-                { value: '0', label: 'Events' },
-                { value: '0', label: 'Groups' },
-                { value: '0', label: 'Friends' },
+                { value: String(engagementStats?.attendance_count || 0), label: 'Events' },
+                { value: String(engagementStats?.badges?.length || 0), label: 'Badges' },
+                { value: String(engagementStats?.streaks?.[0]?.current_streak || 0), label: 'Streak' },
               ].map((stat) => (
                 <GlassCard key={stat.label} variant="subtle" className="p-4 text-center">
                   <div className="text-2xl font-bold text-primary">{stat.value}</div>
@@ -188,6 +192,36 @@ export default function Profile() {
               ))}
             </div>
           </StaggerItem>
+
+          {/* Streaks */}
+          {engagementStats?.streaks && engagementStats.streaks.length > 0 && (
+            <StaggerItem>
+              <div className="mt-4 space-y-2">
+                {engagementStats.streaks.slice(0, 3).map((streak, index) => (
+                  <StreakDisplay
+                    key={`${streak.org_id}-${index}`}
+                    currentStreak={streak.current_streak}
+                    longestStreak={streak.longest_streak}
+                    category={streak.category}
+                    orgName={streak.orgs?.name}
+                  />
+                ))}
+              </div>
+            </StaggerItem>
+          )}
+
+          {/* Badges */}
+          {engagementStats?.badges && (
+            <StaggerItem>
+              <GlassCard variant="elevated" className="mt-4 p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Award className="h-5 w-5 text-primary" />
+                  <span className="font-semibold">Badges</span>
+                </div>
+                <BadgeGrid badges={engagementStats.badges} showAll />
+              </GlassCard>
+            </StaggerItem>
+          )}
 
           {/* Social Energy */}
           <StaggerItem>
