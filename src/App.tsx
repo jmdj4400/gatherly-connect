@@ -25,6 +25,7 @@ import OrganizerSettings from "./pages/OrganizerSettings";
 import CommunityLanding from "./pages/CommunityLanding";
 import CommunityFeed from "./pages/CommunityFeed";
 import OrganizerGroupsDashboard from "./pages/OrganizerGroupsDashboard";
+import OrganizerWidgets from "./pages/OrganizerWidgets";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -84,6 +85,7 @@ const App = () => {
                 <Route path="/organizer/team" element={<OrganizerTeam />} />
                 <Route path="/organizer/settings" element={<OrganizerSettings />} />
                 <Route path="/organizer/events/:id/groups" element={<OrganizerGroupsDashboard />} />
+                <Route path="/organizer/widgets" element={<OrganizerWidgets />} />
                 <Route path="/c/:handle" element={<CommunityLanding />} />
                 <Route path="/c/:handle/feed" element={<CommunityFeed />} />
                 <Route path="*" element={<NotFound />} />
