@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      community_followers: {
+        Row: {
+          created_at: string
+          id: string
+          notify_new_events: boolean | null
+          org_id: string
+          public_display: boolean | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notify_new_events?: boolean | null
+          org_id: string
+          public_display?: boolean | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notify_new_events?: boolean | null
+          org_id?: string
+          public_display?: boolean | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_followers_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_assets: {
         Row: {
           asset_type: string
@@ -438,26 +473,38 @@ export type Database = {
       }
       orgs: {
         Row: {
+          community_tags: string[] | null
           contact_email: string | null
+          cover_image_url: string | null
           created_at: string | null
           id: string
           name: string
+          org_handle: string | null
+          short_bio: string | null
           stripe_customer_id: string | null
           updated_at: string | null
         }
         Insert: {
+          community_tags?: string[] | null
           contact_email?: string | null
+          cover_image_url?: string | null
           created_at?: string | null
           id?: string
           name: string
+          org_handle?: string | null
+          short_bio?: string | null
           stripe_customer_id?: string | null
           updated_at?: string | null
         }
         Update: {
+          community_tags?: string[] | null
           contact_email?: string | null
+          cover_image_url?: string | null
           created_at?: string | null
           id?: string
           name?: string
+          org_handle?: string | null
+          short_bio?: string | null
           stripe_customer_id?: string | null
           updated_at?: string | null
         }
