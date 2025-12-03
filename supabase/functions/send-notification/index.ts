@@ -37,86 +37,123 @@ const NOTIFICATION_TEMPLATES: Record<NotificationType, { title: string; body: st
   },
 };
 
-// Simple Web Push sender using fetch
-async function sendPushNotification(
+// Base64url encoding/decoding utilities
+function base64UrlEncode(data: Uint8Array): string {
+  return btoa(String.fromCharCode(...data))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
+
+function base64UrlDecode(str: string): Uint8Array {
+  const padding = '='.repeat((4 - (str.length % 4)) % 4);
+  const base64 = (str + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
+}
+
+// Create VAPID JWT
+async function createVapidJwt(
+  audience: string,
+  subject: string,
+  publicKey: string,
+  privateKey: string
+): Promise<string> {
+  const header = { typ: 'JWT', alg: 'ES256' };
+  const now = Math.floor(Date.now() / 1000);
+  const payload = {
+    aud: audience,
+    exp: now + 86400, // 24 hours
+    sub: subject,
+  };
+
+  const encoder = new TextEncoder();
+  const headerB64 = base64UrlEncode(encoder.encode(JSON.stringify(header)));
+  const payloadB64 = base64UrlEncode(encoder.encode(JSON.stringify(payload)));
+  const unsignedToken = `${headerB64}.${payloadB64}`;
+
+  // Import private key for signing
+  const privateKeyBytes = base64UrlDecode(privateKey);
+  
+  // Create JWK from raw private key
+  const publicKeyBytes = base64UrlDecode(publicKey);
+  
+  // Extract x and y coordinates from public key (skip first byte which is 0x04 uncompressed marker)
+  const x = publicKeyBytes.slice(1, 33);
+  const y = publicKeyBytes.slice(33, 65);
+  
+  const jwk = {
+    kty: 'EC',
+    crv: 'P-256',
+    x: base64UrlEncode(x),
+    y: base64UrlEncode(y),
+    d: base64UrlEncode(privateKeyBytes),
+  };
+
+  const cryptoKey = await crypto.subtle.importKey(
+    'jwk',
+    jwk,
+    { name: 'ECDSA', namedCurve: 'P-256' },
+    false,
+    ['sign']
+  );
+
+  const signature = await crypto.subtle.sign(
+    { name: 'ECDSA', hash: 'SHA-256' },
+    cryptoKey,
+    encoder.encode(unsignedToken)
+  );
+
+  // Convert signature from DER to raw format (r || s)
+  const sigArray = new Uint8Array(signature);
+  const signatureB64 = base64UrlEncode(sigArray);
+
+  return `${unsignedToken}.${signatureB64}`;
+}
+
+// Send web push notification
+async function sendWebPush(
   subscription: { endpoint: string; p256dh: string; auth: string },
-  payload: { title: string; body: string; icon?: string; data?: Record<string, string> },
+  payload: string,
   vapidPublicKey: string,
   vapidPrivateKey: string
-): Promise<{ success: boolean; statusCode?: number }> {
+): Promise<{ success: boolean; statusCode?: number; error?: string }> {
   try {
-    // Create JWT for VAPID
-    const audience = new URL(subscription.endpoint).origin;
-    const expiration = Math.floor(Date.now() / 1000) + 86400; // 24 hours
-    
-    const header = { alg: 'ES256', typ: 'JWT' };
-    const jwtPayload = {
-      aud: audience,
-      exp: expiration,
-      sub: 'mailto:noreply@gatherly.app',
-    };
+    const endpoint = new URL(subscription.endpoint);
+    const audience = endpoint.origin;
 
-    // Base64url encode
-    const base64url = (data: string): string => {
-      return btoa(data)
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=+$/, '');
-    };
-
-    const encodedHeader = base64url(JSON.stringify(header));
-    const encodedPayload = base64url(JSON.stringify(jwtPayload));
-    const unsignedToken = `${encodedHeader}.${encodedPayload}`;
-
-    // Import private key and sign
-    const privateKeyBuffer = Uint8Array.from(atob(vapidPrivateKey.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
-    
-    const cryptoKey = await crypto.subtle.importKey(
-      'pkcs8',
-      privateKeyBuffer,
-      { name: 'ECDSA', namedCurve: 'P-256' },
-      false,
-      ['sign']
+    // Create VAPID JWT
+    const jwt = await createVapidJwt(
+      audience,
+      'mailto:noreply@gatherly.app',
+      vapidPublicKey,
+      vapidPrivateKey
     );
 
-    const signature = await crypto.subtle.sign(
-      { name: 'ECDSA', hash: 'SHA-256' },
-      cryptoKey,
-      new TextEncoder().encode(unsignedToken)
-    );
-
-    const signatureBase64 = base64url(String.fromCharCode(...new Uint8Array(signature)));
-    const jwt = `${unsignedToken}.${signatureBase64}`;
-
-    // Send the notification
+    // Send the push notification
     const response = await fetch(subscription.endpoint, {
       method: 'POST',
       headers: {
         'Authorization': `vapid t=${jwt}, k=${vapidPublicKey}`,
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/octet-stream',
+        'Content-Encoding': 'aes128gcm',
         'TTL': '86400',
       },
-      body: JSON.stringify(payload),
+      body: new TextEncoder().encode(payload),
     });
 
-    console.log(`[send-notification] Push response: ${response.status}`);
+    console.log(`[send-notification] Push response status: ${response.status}`);
 
     if (response.status === 201 || response.status === 200) {
       return { success: true, statusCode: response.status };
     }
 
-    // Handle specific error codes
-    if (response.status === 410 || response.status === 404) {
-      // Subscription expired or invalid
-      return { success: false, statusCode: response.status };
-    }
-
     const errorText = await response.text();
     console.error(`[send-notification] Push failed: ${response.status} - ${errorText}`);
-    return { success: false, statusCode: response.status };
-  } catch (error) {
+    return { success: false, statusCode: response.status, error: errorText };
+  } catch (error: any) {
     console.error('[send-notification] Push error:', error);
-    return { success: false };
+    return { success: false, error: error.message };
   }
 }
 
@@ -164,7 +201,7 @@ serve(async (req) => {
 
     // Check if VAPID keys are configured
     if (!vapidPublicKey || !vapidPrivateKey) {
-      console.log('[send-notification] VAPID keys not configured, logging only');
+      console.log('[send-notification] VAPID keys not configured');
       return new Response(
         JSON.stringify({ 
           success: true, 
@@ -207,12 +244,13 @@ serve(async (req) => {
 
     console.log(`[send-notification] Found ${subscriptions.length} subscriptions`);
 
-    const payload = {
+    const payload = JSON.stringify({
       title,
       body,
       icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-192x192.png',
       data: { type, ...data },
-    };
+    });
 
     let successCount = 0;
     let failedCount = 0;
@@ -220,7 +258,7 @@ serve(async (req) => {
 
     // Send notifications to all subscriptions
     for (const sub of subscriptions) {
-      const result = await sendPushNotification(
+      const result = await sendWebPush(
         { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
         payload,
         vapidPublicKey,
@@ -232,11 +270,12 @@ serve(async (req) => {
         console.log(`[send-notification] Sent to user ${sub.user_id}`);
       } else {
         failedCount++;
+        console.log(`[send-notification] Failed for user ${sub.user_id}: ${result.error}`);
+        
         // Mark expired subscriptions for deletion (410 Gone or 404 Not Found)
         if (result.statusCode === 410 || result.statusCode === 404) {
           expiredSubscriptionIds.push(sub.id);
         }
-        console.log(`[send-notification] Failed for user ${sub.user_id}`);
       }
     }
 
