@@ -1,5 +1,7 @@
 import { format } from 'date-fns';
+import { motion } from 'framer-motion';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
 
 interface Badge {
   name: string;
@@ -38,9 +40,11 @@ export function BadgeGrid({ badges, showAll = false }: BadgeGridProps) {
 
   if (displayBadges.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground text-center py-4">
-        No badges earned yet. Keep attending events!
-      </p>
+      <div className="text-center py-6">
+        <p className="text-sm text-muted-foreground">
+          No badges earned yet. Keep attending events!
+        </p>
+      </div>
     );
   }
 
@@ -50,24 +54,28 @@ export function BadgeGrid({ badges, showAll = false }: BadgeGridProps) {
         {displayBadges.map((badge, index) => (
           <Tooltip key={badge.slug || index}>
             <TooltipTrigger asChild>
-              <div
-                className={`flex flex-col items-center p-3 rounded-xl transition-all ${
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.05 }}
+                className={cn(
+                  "flex flex-col items-center p-3 rounded-xl transition-all cursor-pointer",
                   badge.earned
-                    ? 'bg-primary/10 border border-primary/20'
-                    : 'bg-muted/50 opacity-40 grayscale'
-                }`}
+                    ? "bg-primary/10 border border-primary/20 shadow-soft"
+                    : "bg-muted/30 opacity-40 grayscale"
+                )}
               >
-                <span className="text-2xl mb-1">{badge.icon}</span>
-                <span className="text-xs font-medium text-center line-clamp-1">
+                <span className="text-2xl mb-1.5">{badge.icon}</span>
+                <span className="text-[11px] font-medium text-center line-clamp-1">
                   {badge.name}
                 </span>
-              </div>
+              </motion.div>
             </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-[200px]">
+            <TooltipContent side="top" className="max-w-[200px] p-3">
               <p className="font-semibold">{badge.name}</p>
-              <p className="text-xs text-muted-foreground">{badge.description}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{badge.description}</p>
               {badge.earned && badge.awarded_at && (
-                <p className="text-xs text-primary mt-1">
+                <p className="text-xs text-primary mt-1.5 font-medium">
                   Earned {format(new Date(badge.awarded_at), 'MMM d, yyyy')}
                 </p>
               )}

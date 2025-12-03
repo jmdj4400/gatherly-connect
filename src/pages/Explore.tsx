@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, Calendar, X, SlidersHorizontal, Map, List, Sparkles } from 'lucide-react';
+import { Search, MapPin, Calendar, X, Map, List, Sparkles } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,8 +9,9 @@ import { EventCard } from '@/components/events/EventCard';
 import { RecommendedEventCard } from '@/components/events/RecommendedEventCard';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { GlassCard } from '@/components/ui/glass-card';
-import { StaggerContainer, StaggerItem, buttonTapVariants } from '@/components/ui/page-transition';
-import { SkeletonLoader, PageLoader } from '@/components/ui/loading-spinner';
+import { StaggerContainer, StaggerItem } from '@/components/ui/page-transition';
+import { Skeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
 import { useRecommendedEvents } from '@/hooks/useRecommendedEvents';
@@ -95,26 +96,26 @@ export default function Explore() {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg border-b border-border/50">
+      <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-xl border-b border-border/30">
         <div className="p-4 space-y-4">
           {/* Location + View Toggle */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <MapPin className="h-4 w-4 text-primary" />
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <MapPin className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-medium">{profile?.city || 'All Cities'}</p>
+                <p className="font-semibold">{profile?.city || 'All Cities'}</p>
                 <p className="text-xs text-muted-foreground">Events nearby</p>
               </div>
             </div>
             
             {/* View toggle */}
-            <div className="flex items-center bg-muted rounded-lg p-1">
+            <div className="flex items-center bg-muted/50 rounded-xl p-1">
               <Button
                 variant={viewMode === 'list' ? 'default' : 'ghost'}
                 size="sm"
-                className="h-8 px-3"
+                className="h-8 px-3 rounded-lg"
                 onClick={() => setViewMode('list')}
               >
                 <List className="h-4 w-4" />
@@ -122,7 +123,7 @@ export default function Explore() {
               <Button
                 variant={viewMode === 'map' ? 'default' : 'ghost'}
                 size="sm"
-                className="h-8 px-3"
+                className="h-8 px-3 rounded-lg"
                 onClick={() => setViewMode('map')}
               >
                 <Map className="h-4 w-4" />
@@ -137,7 +138,7 @@ export default function Explore() {
               placeholder="Search events, venues..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 pr-10 h-12 bg-card border-border/50 rounded-xl"
+              className="pl-12 pr-10 h-12 bg-muted/50"
             />
             {searchQuery && (
               <Button
@@ -152,20 +153,18 @@ export default function Explore() {
           </div>
 
           {/* Categories */}
-          <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-hide">
             {CATEGORIES.map((category) => (
               <motion.div
                 key={category.id}
-                variants={buttonTapVariants}
-                initial="initial"
-                whileTap="tap"
+                whileTap={{ scale: 0.95 }}
               >
                 <Badge
                   variant={selectedCategory === category.id ? 'default' : 'outline'}
-                  className={`cursor-pointer whitespace-nowrap px-4 py-2.5 text-sm font-medium transition-all ${
+                  className={`cursor-pointer whitespace-nowrap px-4 py-2.5 text-sm font-medium transition-all rounded-xl ${
                     selectedCategory === category.id
-                      ? 'shadow-md shadow-primary/20'
-                      : 'hover:bg-muted'
+                      ? 'shadow-soft'
+                      : 'hover:bg-muted/80'
                   }`}
                   onClick={() => setSelectedCategory(category.id)}
                 >
@@ -187,9 +186,9 @@ export default function Explore() {
             animate={{ opacity: 1, y: 0 }}
           >
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center">
-                  <Sparkles className="h-4 w-4 text-white" />
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl gradient-brand flex items-center justify-center shadow-primary">
+                  <Sparkles className="h-5 w-5 text-primary-foreground" />
                 </div>
                 <div>
                   <h2 className="font-semibold">For You</h2>
@@ -198,8 +197,9 @@ export default function Explore() {
               </div>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon-sm"
                 onClick={() => setShowForYou(false)}
+                className="rounded-lg"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -209,9 +209,9 @@ export default function Explore() {
               <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4">
                 {[1, 2, 3].map((i) => (
                   <GlassCard key={i} className="min-w-[280px] p-4">
-                    <SkeletonLoader className="h-32 rounded-xl mb-3" />
-                    <SkeletonLoader variant="text" className="w-3/4 mb-2" />
-                    <SkeletonLoader variant="text" className="w-1/2" />
+                    <Skeleton className="h-32 rounded-xl mb-3" />
+                    <Skeleton variant="text" className="w-3/4 mb-2" />
+                    <Skeleton variant="text" className="w-1/2" />
                   </GlassCard>
                 ))}
               </div>
@@ -245,9 +245,9 @@ export default function Explore() {
             >
               {[1, 2, 3].map((i) => (
                 <GlassCard key={i} className="p-4">
-                  <SkeletonLoader className="h-44 rounded-xl mb-4" />
-                  <SkeletonLoader variant="text" className="w-3/4 mb-2" />
-                  <SkeletonLoader variant="text" className="w-1/2" />
+                  <Skeleton className="h-44 rounded-xl mb-4" />
+                  <Skeleton variant="text" className="w-3/4 mb-2" />
+                  <Skeleton variant="text" className="w-1/2" />
                 </GlassCard>
               ))}
             </motion.div>
@@ -258,24 +258,18 @@ export default function Explore() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
             >
-              <GlassCard variant="subtle" className="text-center py-16">
-                <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-6">
-                  <Calendar className="h-10 w-10 text-muted-foreground" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2">No events found</h3>
-                <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
-                  Try adjusting your filters or check back later for new events
-                </p>
-                <Button
-                  variant="outline"
-                  onClick={() => {
+              <EmptyState
+                icon={Calendar}
+                title="No events found"
+                description="Try adjusting your filters or check back later for new events"
+                action={{
+                  label: 'Clear Filters',
+                  onClick: () => {
                     setSelectedCategory('all');
                     setSearchQuery('');
-                  }}
-                >
-                  Clear Filters
-                </Button>
-              </GlassCard>
+                  }
+                }}
+              />
             </motion.div>
           ) : (
             <motion.div
@@ -284,7 +278,7 @@ export default function Explore() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-sm text-muted-foreground mb-4 font-medium">
                 {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''} found
               </p>
               <StaggerContainer className="grid gap-4">

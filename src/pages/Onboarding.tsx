@@ -1,15 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Check, Sparkles, Bell } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { InterestsStep } from '@/components/onboarding/InterestsStep';
 import { SocialEnergyStep } from '@/components/onboarding/SocialEnergyStep';
 import { LocationStep } from '@/components/onboarding/LocationStep';
 import { NotificationsStep } from '@/components/onboarding/NotificationsStep';
-import { GlassCard } from '@/components/ui/glass-card';
-import { buttonTapVariants } from '@/components/ui/page-transition';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -44,7 +42,7 @@ const stepInfo = {
 
 const slideVariants = {
   enter: (direction: number) => ({
-    x: direction > 0 ? 100 : -100,
+    x: direction > 0 ? 80 : -80,
     opacity: 0,
   }),
   center: {
@@ -52,7 +50,7 @@ const slideVariants = {
     opacity: 1,
   },
   exit: (direction: number) => ({
-    x: direction < 0 ? 100 : -100,
+    x: direction < 0 ? 80 : -80,
     opacity: 0,
   }),
 };
@@ -83,7 +81,7 @@ export default function Onboarding() {
       case 'location':
         return city.trim().length > 0;
       case 'notifications':
-        return true; // Always can proceed
+        return true;
       default:
         return false;
     }
@@ -116,11 +114,9 @@ export default function Onboarding() {
 
         if (error) throw error;
 
-        // Recompute embedding with new profile data
         await recomputeEmbedding();
         await refreshProfile();
         
-        // Move to notifications step
         setDirection(1);
         setCurrentStep('notifications');
       } catch (error: any) {
@@ -133,7 +129,6 @@ export default function Onboarding() {
         setSaving(false);
       }
     } else if (currentStep === 'notifications') {
-      // Final step - go to home
       toast({
         title: "You're all set! 🎉",
         description: "Your profile is ready. Start exploring events!"
@@ -156,14 +151,15 @@ export default function Onboarding() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="p-4 flex items-center gap-4">
+      <header className="p-5 flex items-center gap-4">
         {stepIndex > 0 ? (
-          <motion.div
-            variants={buttonTapVariants}
-            initial="initial"
-            whileTap="tap"
-          >
-            <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full">
+          <motion.div whileTap={{ scale: 0.95 }}>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={handleBack} 
+              className="rounded-xl h-10 w-10"
+            >
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </motion.div>
@@ -171,24 +167,24 @@ export default function Onboarding() {
           <div className="w-10" />
         )}
         <div className="flex-1">
-          <Progress value={progress} className="h-2" />
+          <Progress value={progress} className="h-1.5" />
         </div>
-        <span className="text-sm text-muted-foreground font-medium w-10 text-right">
+        <span className="text-sm text-muted-foreground font-medium w-10 text-right tabular-nums">
           {stepIndex + 1}/{STEPS.length}
         </span>
       </header>
 
       {/* Step indicator dots */}
-      <div className="flex justify-center gap-2 pb-4">
+      <div className="flex justify-center gap-2 pb-6">
         {STEPS.map((step, index) => (
           <motion.div
             key={step}
-            className={`h-2 rounded-full transition-all duration-300 ${
+            className={`h-1.5 rounded-full transition-all duration-300 ${
               index === stepIndex
                 ? 'w-8 bg-primary'
                 : index < stepIndex
-                ? 'w-2 bg-primary/60'
-                : 'w-2 bg-muted'
+                ? 'w-1.5 bg-primary/60'
+                : 'w-1.5 bg-muted'
             }`}
             animate={{ scale: index === stepIndex ? 1.1 : 1 }}
           />
@@ -196,17 +192,27 @@ export default function Onboarding() {
       </div>
 
       {/* Title Section */}
-      <div className="px-6 pb-4">
-        <motion.div
-          key={currentStep + '-title'}
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center"
-        >
-          <span className="text-4xl mb-3 block">{info.icon}</span>
-          <h1 className="text-2xl font-bold tracking-tight mb-2">{info.title}</h1>
-          <p className="text-muted-foreground">{info.subtitle}</p>
-        </motion.div>
+      <div className="px-6 pb-6">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentStep + '-title'}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="text-center"
+          >
+            <motion.div 
+              className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto mb-4 shadow-soft"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.1 }}
+            >
+              <span className="text-3xl">{info.icon}</span>
+            </motion.div>
+            <h1 className="text-2xl font-bold tracking-tight mb-2">{info.title}</h1>
+            <p className="text-muted-foreground">{info.subtitle}</p>
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* Content */}
@@ -219,7 +225,7 @@ export default function Onboarding() {
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
           >
             {currentStep === 'interests' && (
               <InterestsStep selected={interests} onChange={setInterests} />
@@ -244,14 +250,11 @@ export default function Onboarding() {
 
       {/* Footer */}
       {currentStep !== 'notifications' && (
-        <div className="p-6 border-t bg-card/50 backdrop-blur-sm">
-          <motion.div
-            variants={buttonTapVariants}
-            initial="initial"
-            whileTap="tap"
-          >
+        <div className="p-6 border-t border-border/50 bg-card/50 backdrop-blur-xl">
+          <motion.div whileTap={{ scale: 0.98 }}>
             <Button
-              className="w-full h-14 text-lg font-semibold shadow-lg shadow-primary/20"
+              className="w-full h-14 text-base font-semibold shadow-primary"
+              variant="gradient"
               onClick={handleNext}
               disabled={!canProceed() || saving}
             >
@@ -279,7 +282,7 @@ export default function Onboarding() {
             <motion.button
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="w-full mt-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="w-full mt-4 text-sm text-muted-foreground hover:text-foreground transition-colors font-medium"
               onClick={handleNext}
               disabled={saving}
             >

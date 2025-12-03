@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { GlassCard } from '@/components/ui/glass-card';
-import { StaggerContainer, StaggerItem, buttonTapVariants } from '@/components/ui/page-transition';
+import { PageHeader } from '@/components/ui/page-header';
+import { StaggerContainer, StaggerItem, FadeIn } from '@/components/ui/page-transition';
 import { PageLoader } from '@/components/ui/loading-spinner';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { useAuth } from '@/lib/auth';
@@ -31,12 +32,12 @@ const INTEREST_EMOJIS: Record<string, string> = {
   nightlife: '🍹',
 };
 
-const ENERGY_LABELS: Record<number, { label: string; emoji: string; color: string }> = {
-  1: { label: 'Quiet Observer', emoji: '🌙', color: 'from-blue-500/20 to-blue-500/5' },
-  2: { label: 'Selective Socializer', emoji: '🌤️', color: 'from-cyan-500/20 to-cyan-500/5' },
-  3: { label: 'Balanced', emoji: '☀️', color: 'from-yellow-500/20 to-yellow-500/5' },
-  4: { label: 'Social Butterfly', emoji: '🦋', color: 'from-orange-500/20 to-orange-500/5' },
-  5: { label: 'Life of the Party', emoji: '🎉', color: 'from-pink-500/20 to-pink-500/5' },
+const ENERGY_LABELS: Record<number, { label: string; emoji: string }> = {
+  1: { label: 'Quiet Observer', emoji: '🌙' },
+  2: { label: 'Selective Socializer', emoji: '🌤️' },
+  3: { label: 'Balanced', emoji: '☀️' },
+  4: { label: 'Social Butterfly', emoji: '🦋' },
+  5: { label: 'Life of the Party', emoji: '🎉' },
 };
 
 export default function Profile() {
@@ -53,9 +54,7 @@ export default function Profile() {
   const handleTestNotification = async () => {
     if (!user) return;
     
-    // First request permission
     const permission = await requestNotificationPermission();
-    console.log('[Profile] Notification permission:', permission);
     
     if (permission !== 'granted') {
       toast({
@@ -66,9 +65,7 @@ export default function Profile() {
       return;
     }
     
-    // Try to subscribe
     const subscribed = await subscribeToPush(user.id);
-    console.log('[Profile] Subscribe result:', subscribed);
     
     if (subscribed) {
       toast({
@@ -76,12 +73,10 @@ export default function Profile() {
         description: "Du modtager nu push notifikationer"
       });
       
-      // Show a local test notification
       await showLocalNotification('Test Notifikation 🎉', {
         body: 'Hvis du ser dette, virker notifikationer!',
       });
     } else {
-      // Try local notification anyway
       await showLocalNotification('Test Notifikation 🎉', {
         body: 'Lokal notifikation virker!',
       });
@@ -101,26 +96,24 @@ export default function Profile() {
     return (
       <div className="min-h-screen bg-background pb-24">
         <div className="flex flex-col items-center justify-center h-[70vh] p-6 text-center">
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-6"
-          >
-            <span className="text-5xl">👤</span>
-          </motion.div>
-          <h2 className="text-2xl font-bold mb-2">Sign in to view your profile</h2>
-          <p className="text-muted-foreground mb-6 max-w-sm">
-            Create an account or sign in to get started with Gatherly
-          </p>
-          <motion.div
-            variants={buttonTapVariants}
-            initial="initial"
-            whileTap="tap"
-          >
-            <Button onClick={() => navigate('/auth')} size="lg" className="font-semibold">
+          <FadeIn>
+            <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-6 shadow-soft">
+              <span className="text-5xl">👤</span>
+            </div>
+          </FadeIn>
+          <FadeIn delay={0.1}>
+            <h2 className="text-2xl font-bold mb-2 tracking-tight">Sign in to view your profile</h2>
+          </FadeIn>
+          <FadeIn delay={0.2}>
+            <p className="text-muted-foreground mb-8 max-w-sm">
+              Create an account or sign in to get started with Gatherly
+            </p>
+          </FadeIn>
+          <FadeIn delay={0.3}>
+            <Button onClick={() => navigate('/auth')} size="lg" variant="gradient">
               Sign In
             </Button>
-          </motion.div>
+          </FadeIn>
         </div>
         <BottomNav />
       </div>
@@ -132,17 +125,13 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <header className="relative h-36 bg-gradient-to-br from-primary/30 via-primary/10 to-accent/20">
-        <motion.div
-          className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,hsl(var(--primary)/0.2),transparent_50%)]"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8 }}
-        />
+      <header className="relative h-32 bg-gradient-to-br from-primary/20 via-primary/10 to-accent/10 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.15),transparent_60%)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/80" />
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-4 right-4 bg-card/50 backdrop-blur-sm rounded-full"
+          className="absolute top-4 right-4 bg-card/60 backdrop-blur-sm rounded-xl shadow-soft"
           onClick={() => navigate('/settings')}
         >
           <Settings className="h-5 w-5" />
@@ -150,12 +139,12 @@ export default function Profile() {
       </header>
 
       {/* Profile Info */}
-      <div className="px-6 -mt-16">
+      <div className="px-5 -mt-14">
         <StaggerContainer>
           <StaggerItem className="flex flex-col items-center">
-            <Avatar className="h-32 w-32 border-4 border-background shadow-xl ring-4 ring-primary/20">
+            <Avatar size="2xl" ring className="border-4 border-background shadow-elevated">
               <AvatarImage src={profile.avatar_url || undefined} />
-              <AvatarFallback className="text-4xl bg-gradient-to-br from-primary to-primary/60 text-primary-foreground">
+              <AvatarFallback className="text-3xl gradient-brand text-primary-foreground">
                 {profile.display_name?.[0] || user.email?.[0] || '?'}
               </AvatarFallback>
             </Avatar>
@@ -167,12 +156,12 @@ export default function Profile() {
             {profile.city && (
               <div className="flex items-center gap-1.5 text-muted-foreground mt-1">
                 <MapPin className="h-4 w-4" />
-                <span>{profile.city}</span>
+                <span className="text-sm">{profile.city}</span>
               </div>
             )}
 
             {profile.verified && (
-              <Badge className="mt-3 bg-green-500/20 text-green-700 border-green-500/30">
+              <Badge className="mt-3 bg-success/10 text-success border-success/20">
                 ✓ Verified
               </Badge>
             )}
@@ -180,14 +169,14 @@ export default function Profile() {
 
           {/* Premium Upgrade CTA */}
           <StaggerItem>
-            <div className="mt-4">
+            <div className="mt-5">
               <UpgradeCTA />
             </div>
           </StaggerItem>
 
           {/* Stats */}
           <StaggerItem>
-            <div className="grid grid-cols-3 gap-3 mt-6">
+            <div className="grid grid-cols-3 gap-3 mt-5">
               {[
                 { value: String(engagementStats?.attendance_count || 0), label: 'Events' },
                 { value: String(engagementStats?.badges?.length || 0), label: 'Badges' },
@@ -195,7 +184,7 @@ export default function Profile() {
               ].map((stat) => (
                 <GlassCard key={stat.label} variant="subtle" className="p-4 text-center">
                   <div className="text-2xl font-bold text-primary">{stat.value}</div>
-                  <div className="text-xs text-muted-foreground mt-0.5">{stat.label}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5 font-medium">{stat.label}</div>
                 </GlassCard>
               ))}
             </div>
@@ -221,9 +210,11 @@ export default function Profile() {
           {/* Badges */}
           {engagementStats?.badges && (
             <StaggerItem>
-              <GlassCard variant="elevated" className="mt-4 p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Award className="h-5 w-5 text-primary" />
+              <GlassCard variant="elevated" className="mt-4 p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Award className="h-4 w-4 text-primary" />
+                  </div>
                   <span className="font-semibold">Badges</span>
                 </div>
                 <BadgeGrid badges={engagementStats.badges} showAll />
@@ -233,27 +224,31 @@ export default function Profile() {
 
           {/* Social Energy */}
           <StaggerItem>
-            <GlassCard variant="elevated" className={`mt-4 p-4 bg-gradient-to-r ${energyInfo.color}`}>
+            <GlassCard variant="elevated" className="mt-4 p-5 bg-gradient-to-r from-primary/5 to-accent/5">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-xl bg-card/80 flex items-center justify-center text-2xl">
+                <div className="h-14 w-14 rounded-2xl bg-card shadow-soft flex items-center justify-center text-2xl">
                   {energyInfo.emoji}
                 </div>
                 <div className="flex-1">
-                  <div className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">
+                  <div className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-0.5">
                     Social Energy
                   </div>
                   <div className="font-semibold text-lg">{energyInfo.label}</div>
                 </div>
-                <Zap className="h-5 w-5 text-primary" />
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Zap className="h-5 w-5 text-primary" />
+                </div>
               </div>
             </GlassCard>
           </StaggerItem>
 
           {/* Interests */}
           <StaggerItem>
-            <GlassCard variant="elevated" className="mt-4 p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Heart className="h-5 w-5 text-primary" />
+            <GlassCard variant="elevated" className="mt-4 p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Heart className="h-4 w-4 text-primary" />
+                </div>
                 <span className="font-semibold">Interests</span>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -284,9 +279,7 @@ export default function Profile() {
               ].map((action) => (
                 <motion.div
                   key={action.label}
-                  variants={buttonTapVariants}
-                  initial="initial"
-                  whileTap="tap"
+                  whileTap={{ scale: 0.98 }}
                 >
                   <GlassCard
                     interactive
@@ -305,15 +298,11 @@ export default function Profile() {
                 </motion.div>
               ))}
               
-              <motion.div
-                variants={buttonTapVariants}
-                initial="initial"
-                whileTap="tap"
-              >
+              <motion.div whileTap={{ scale: 0.98 }}>
                 <GlassCard
                   interactive
                   variant="outlined"
-                  className="p-4 border-destructive/30"
+                  className="p-4 border-destructive/20 hover:border-destructive/40"
                   onClick={handleSignOut}
                 >
                   <div className="flex items-center gap-4">

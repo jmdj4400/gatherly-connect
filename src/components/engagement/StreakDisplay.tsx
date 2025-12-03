@@ -1,4 +1,5 @@
 import { Flame } from 'lucide-react';
+import { GlassCard } from '@/components/ui/glass-card';
 
 interface StreakDisplayProps {
   currentStreak: number;
@@ -19,7 +20,7 @@ export function StreakDisplay({
 
   if (compact) {
     return (
-      <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-orange-500/10 text-orange-600 rounded-full text-sm font-medium">
+      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-500/10 text-orange-600 rounded-xl text-sm font-semibold">
         <Flame className="h-4 w-4" />
         <span>{currentStreak}</span>
       </div>
@@ -27,19 +28,21 @@ export function StreakDisplay({
   }
 
   return (
-    <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-orange-500/10 to-red-500/10 rounded-xl border border-orange-500/20">
-      <div className="flex items-center justify-center h-12 w-12 bg-orange-500/20 rounded-full">
-        <Flame className="h-6 w-6 text-orange-500" />
-      </div>
-      <div className="flex-1">
-        <div className="flex items-baseline gap-1">
-          <span className="text-2xl font-bold text-orange-600">{currentStreak}</span>
-          <span className="text-sm text-muted-foreground">week streak</span>
+    <GlassCard variant="subtle" className="p-4 bg-gradient-to-r from-orange-500/10 to-red-500/10 border-orange-500/20">
+      <div className="flex items-center gap-4">
+        <div className="flex items-center justify-center h-12 w-12 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-xl">
+          <Flame className="h-6 w-6 text-orange-500" />
         </div>
-        <p className="text-xs text-muted-foreground">
-          {category || orgName || 'All events'} · Best: {longestStreak}
-        </p>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-2xl font-bold text-orange-600">{currentStreak}</span>
+            <span className="text-sm text-muted-foreground">week streak</span>
+          </div>
+          <p className="text-xs text-muted-foreground truncate">
+            {category || orgName || 'All events'} · Best: {longestStreak}
+          </p>
+        </div>
       </div>
-    </div>
+    </GlassCard>
   );
 }

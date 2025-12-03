@@ -16,53 +16,51 @@ interface SocialEnergyStepProps {
 
 export function SocialEnergyStep({ value, onChange }: SocialEnergyStepProps) {
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold mb-2">What's your social energy?</h2>
-        <p className="text-muted-foreground">
-          This helps us match you with people who have similar vibes
-        </p>
-      </div>
-
-      <div className="space-y-3">
-        {ENERGY_LEVELS.map((level, index) => {
-          const isSelected = value === level.value;
-          
-          return (
-            <motion.button
-              key={level.value}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-              onClick={() => onChange(level.value)}
-              className={cn(
-                "w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left",
-                isSelected
-                  ? "border-primary bg-primary/10"
-                  : "border-border hover:border-primary/50 bg-card"
+    <div className="space-y-3">
+      {ENERGY_LEVELS.map((level, index) => {
+        const isSelected = value === level.value;
+        
+        return (
+          <motion.button
+            key={level.value}
+            initial={{ opacity: 0, x: -16 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.08, duration: 0.3 }}
+            onClick={() => onChange(level.value)}
+            className={cn(
+              "w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left",
+              isSelected
+                ? "border-primary bg-primary/10 shadow-soft"
+                : "border-border/60 hover:border-primary/40 bg-card"
+            )}
+          >
+            <div className={cn(
+              "h-14 w-14 rounded-xl flex items-center justify-center text-3xl transition-colors",
+              isSelected ? "bg-primary/20" : "bg-muted/50"
+            )}>
+              {level.emoji}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-base">{level.label}</div>
+              <div className="text-sm text-muted-foreground line-clamp-1">{level.description}</div>
+            </div>
+            <div className={cn(
+              "h-6 w-6 rounded-full border-2 flex items-center justify-center transition-all shrink-0",
+              isSelected 
+                ? "border-primary bg-primary" 
+                : "border-muted-foreground/30"
+            )}>
+              {isSelected && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="h-2.5 w-2.5 rounded-full bg-primary-foreground"
+                />
               )}
-            >
-              <span className="text-3xl">{level.emoji}</span>
-              <div className="flex-1">
-                <div className="font-semibold">{level.label}</div>
-                <div className="text-sm text-muted-foreground">{level.description}</div>
-              </div>
-              <div className={cn(
-                "h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors",
-                isSelected ? "border-primary bg-primary" : "border-muted"
-              )}>
-                {isSelected && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="h-3 w-3 rounded-full bg-primary-foreground"
-                  />
-                )}
-              </div>
-            </motion.button>
-          );
-        })}
-      </div>
+            </div>
+          </motion.button>
+        );
+      })}
     </div>
   );
 }

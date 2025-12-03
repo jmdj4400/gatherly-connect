@@ -44,14 +44,16 @@ export function NotificationPermission({ onComplete, showSkip = true }: Notifica
 
   if (!isNotificationSupported()) {
     return (
-      <GlassCard variant="subtle" className="p-6 text-center">
-        <BellOff className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-        <h3 className="font-semibold mb-2">Notifications Not Supported</h3>
-        <p className="text-sm text-muted-foreground mb-4">
+      <GlassCard variant="elevated" className="p-6 text-center">
+        <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+          <BellOff className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <h3 className="font-semibold text-lg mb-2">Notifications Not Supported</h3>
+        <p className="text-sm text-muted-foreground mb-6">
           Your browser doesn't support push notifications.
         </p>
         {showSkip && (
-          <Button variant="outline" onClick={onComplete}>
+          <Button variant="outline" onClick={onComplete} className="w-full h-12">
             Continue
           </Button>
         )}
@@ -61,19 +63,19 @@ export function NotificationPermission({ onComplete, showSkip = true }: Notifica
 
   if (permission === 'granted') {
     return (
-      <GlassCard variant="elevated" className="p-6 text-center bg-green-500/10">
+      <GlassCard variant="elevated" className="p-6 text-center bg-success/5 border-success/20">
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          className="h-16 w-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4"
+          className="h-16 w-16 rounded-2xl bg-success/20 flex items-center justify-center mx-auto mb-4 shadow-soft"
         >
-          <Check className="h-8 w-8 text-green-500" />
+          <Check className="h-8 w-8 text-success" />
         </motion.div>
-        <h3 className="font-semibold mb-2 text-green-700">Notifications Enabled!</h3>
-        <p className="text-sm text-muted-foreground mb-4">
+        <h3 className="font-semibold text-lg mb-2 text-success">Notifications Enabled!</h3>
+        <p className="text-sm text-muted-foreground mb-6">
           You'll receive updates about your groups and events.
         </p>
-        <Button onClick={onComplete}>
+        <Button onClick={onComplete} variant="gradient" className="w-full h-12">
           Continue
         </Button>
       </GlassCard>
@@ -82,14 +84,16 @@ export function NotificationPermission({ onComplete, showSkip = true }: Notifica
 
   if (permission === 'denied') {
     return (
-      <GlassCard variant="subtle" className="p-6 text-center">
-        <BellOff className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-        <h3 className="font-semibold mb-2">Notifications Blocked</h3>
-        <p className="text-sm text-muted-foreground mb-4">
+      <GlassCard variant="elevated" className="p-6 text-center">
+        <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+          <BellOff className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <h3 className="font-semibold text-lg mb-2">Notifications Blocked</h3>
+        <p className="text-sm text-muted-foreground mb-6">
           You can enable notifications later in your browser settings.
         </p>
         {showSkip && (
-          <Button variant="outline" onClick={onComplete}>
+          <Button variant="outline" onClick={onComplete} className="w-full h-12">
             Continue
           </Button>
         )}
@@ -101,10 +105,10 @@ export function NotificationPermission({ onComplete, showSkip = true }: Notifica
     <GlassCard variant="elevated" className="p-6">
       <div className="text-center mb-6">
         <motion.div
-          initial={{ y: -10 }}
+          initial={{ y: -8 }}
           animate={{ y: 0 }}
-          transition={{ repeat: Infinity, repeatType: 'reverse', duration: 1 }}
-          className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4"
+          transition={{ repeat: Infinity, repeatType: 'reverse', duration: 1.2, ease: 'easeInOut' }}
+          className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4 shadow-soft"
         >
           <Bell className="h-8 w-8 text-primary" />
         </motion.div>
@@ -114,7 +118,7 @@ export function NotificationPermission({ onComplete, showSkip = true }: Notifica
         </p>
       </div>
 
-      <div className="space-y-3 mb-6">
+      <div className="space-y-2 mb-6">
         {[
           { icon: '👥', text: 'Know when your group is formed' },
           { icon: '💬', text: 'Never miss a message' },
@@ -122,13 +126,13 @@ export function NotificationPermission({ onComplete, showSkip = true }: Notifica
         ].map((item, index) => (
           <motion.div
             key={index}
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg"
+            className="flex items-center gap-3 p-3.5 bg-muted/30 rounded-xl"
           >
             <span className="text-xl">{item.icon}</span>
-            <span className="text-sm">{item.text}</span>
+            <span className="text-sm font-medium">{item.text}</span>
           </motion.div>
         ))}
       </div>
@@ -136,6 +140,7 @@ export function NotificationPermission({ onComplete, showSkip = true }: Notifica
       <div className="space-y-3">
         <Button 
           className="w-full h-12" 
+          variant="gradient"
           onClick={handleEnable}
           disabled={loading}
         >
@@ -144,7 +149,7 @@ export function NotificationPermission({ onComplete, showSkip = true }: Notifica
         {showSkip && (
           <Button 
             variant="ghost" 
-            className="w-full"
+            className="w-full h-11"
             onClick={onComplete}
           >
             Maybe Later
