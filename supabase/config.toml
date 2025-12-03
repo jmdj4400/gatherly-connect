@@ -54,6 +54,9 @@ verify_jwt = false
 [functions.recommended-events]
 verify_jwt = false
 
+[functions.regenerate-groups]
+verify_jwt = false
+
 [functions.send-notification]
 verify_jwt = false
 

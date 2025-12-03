@@ -166,13 +166,30 @@ serve(async (req) => {
     // STEP 3: Get event details with row lock (FOR UPDATE simulation via select + immediate update)
     const { data: event } = await supabaseAdmin
       .from('events')
-      .select('id, max_group_size, starts_at')
+      .select('id, max_group_size, starts_at, auto_match, freeze_hours_before, host_org_id')
       .eq('id', event_id)
       .single();
 
     if (!event) {
       return new Response(JSON.stringify({ error: 'Event not found' }), {
         status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Check if event is frozen
+    const eventStart = new Date(event.starts_at);
+    const now = new Date();
+    const hoursUntil = (eventStart.getTime() - now.getTime()) / (1000 * 60 * 60);
+    const isFrozen = hoursUntil <= (event.freeze_hours_before || 2);
+
+    if (isFrozen) {
+      // Check if user is already in a group (should have been caught earlier)
+      return new Response(JSON.stringify({ 
+        error: 'Event groups are frozen. You can no longer join.',
+        status: 'frozen'
+      }), {
+        status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

@@ -263,6 +263,7 @@ export type Database = {
         Row: {
           address: string | null
           allow_come_alone: boolean | null
+          auto_match: boolean | null
           category: string | null
           city: string | null
           created_at: string | null
@@ -270,6 +271,7 @@ export type Database = {
           embedding_updated_at: string | null
           ends_at: string | null
           event_embedding: Json | null
+          freeze_hours_before: number | null
           host_org_id: string | null
           id: string
           image_url: string | null
@@ -292,6 +294,7 @@ export type Database = {
         Insert: {
           address?: string | null
           allow_come_alone?: boolean | null
+          auto_match?: boolean | null
           category?: string | null
           city?: string | null
           created_at?: string | null
@@ -299,6 +302,7 @@ export type Database = {
           embedding_updated_at?: string | null
           ends_at?: string | null
           event_embedding?: Json | null
+          freeze_hours_before?: number | null
           host_org_id?: string | null
           id?: string
           image_url?: string | null
@@ -321,6 +325,7 @@ export type Database = {
         Update: {
           address?: string | null
           allow_come_alone?: boolean | null
+          auto_match?: boolean | null
           category?: string | null
           city?: string | null
           created_at?: string | null
@@ -328,6 +333,7 @@ export type Database = {
           embedding_updated_at?: string | null
           ends_at?: string | null
           event_embedding?: Json | null
+          freeze_hours_before?: number | null
           host_org_id?: string | null
           id?: string
           image_url?: string | null
@@ -524,6 +530,8 @@ export type Database = {
       }
       micro_groups: {
         Row: {
+          auto_generated: boolean | null
+          compatibility_score: number | null
           created_at: string | null
           event_id: string
           frozen: boolean | null
@@ -535,6 +543,8 @@ export type Database = {
           status: string | null
         }
         Insert: {
+          auto_generated?: boolean | null
+          compatibility_score?: number | null
           created_at?: string | null
           event_id: string
           frozen?: boolean | null
@@ -546,6 +556,8 @@ export type Database = {
           status?: string | null
         }
         Update: {
+          auto_generated?: boolean | null
+          compatibility_score?: number | null
           created_at?: string | null
           event_id?: string
           frozen?: boolean | null
@@ -562,6 +574,51 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      no_show_predictions: {
+        Row: {
+          computed_at: string
+          event_id: string
+          factors: Json | null
+          group_id: string | null
+          id: string
+          risk_score: number
+          user_id: string
+        }
+        Insert: {
+          computed_at?: string
+          event_id: string
+          factors?: Json | null
+          group_id?: string | null
+          id?: string
+          risk_score?: number
+          user_id: string
+        }
+        Update: {
+          computed_at?: string
+          event_id?: string
+          factors?: Json | null
+          group_id?: string | null
+          id?: string
+          risk_score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "no_show_predictions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "no_show_predictions_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "micro_groups"
             referencedColumns: ["id"]
           },
         ]
