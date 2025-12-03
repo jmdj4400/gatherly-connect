@@ -231,3 +231,22 @@ Deep links: `/event/:id?autojoin=true` - Auto-triggers join flow
 - Deduplication logic prevents same notification twice (5-min TTL)
 - Response includes skipped_duplicates count
 - Expired subscriptions auto-cleaned on 410/404
+
+### Phase 11 — Observability & Logging ✅
+- Created `src/lib/logger.ts` with structured logging utility
+- Log levels: debug, info, warn, error with category prefixes
+- Analytics tracking with `trackAnalytics()` and predefined event types
+- All logs include timestamps and serialized context
+
+### Phase 12 — Frontend Alignment ✅
+- Created `src/lib/error-handler.ts` for consistent error surfaces
+- Standard error codes matching backend (E.PERM, E.FREEZE, etc.)
+- `showErrorToast()` and `showSuccessToast()` for user feedback
+- `withErrorHandling()` wrapper for async operations
+- useRealtimeChat hook updated with structured logging
+
+### Phase 13 — E2E QA Automation ✅
+- Created `src/lib/test-utils.ts` with test runner utilities
+- Test suites: Join Event Flow, Group Chat Flow, Attendance Flow, Permissions
+- `runTestSuite()` and `runAllTests()` for comprehensive testing
+- Results include pass/fail counts, duration, and error details
