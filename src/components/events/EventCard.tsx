@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Calendar, MapPin, Users, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { GlassCard } from '@/components/ui/glass-card';
+import { Card } from '@/components/ui/card';
 import { BoostedBadge } from '@/components/events/BoostedBadge';
 import { format, isToday, isTomorrow } from 'date-fns';
 
@@ -36,9 +36,9 @@ export function EventCard({ event, participantCount = 0, variant = 'default', is
   if (variant === 'compact') {
     return (
       <Link to={`/events/${event.id}`}>
-        <GlassCard interactive variant="elevated" className="p-3">
-          <div className="flex gap-3">
-            <div className="relative h-20 w-20 flex-shrink-0 rounded-xl overflow-hidden bg-muted">
+        <Card variant="interactive" className="p-4">
+          <div className="flex gap-4">
+            <div className="relative h-20 w-20 shrink-0 rounded-xl overflow-hidden bg-muted">
               {event.image_url ? (
                 <img
                   src={event.image_url}
@@ -46,8 +46,13 @@ export function EventCard({ event, participantCount = 0, variant = 'default', is
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <div className="h-full w-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center">
+                <div className="h-full w-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
                   <Calendar className="h-6 w-6 text-primary/60" />
+                </div>
+              )}
+              {isBoosted && (
+                <div className="absolute top-1.5 left-1.5">
+                  <BoostedBadge level={boostLevel} size="sm" />
                 </div>
               )}
             </div>
@@ -65,38 +70,37 @@ export function EventCard({ event, participantCount = 0, variant = 'default', is
               )}
             </div>
           </div>
-        </GlassCard>
+        </Card>
       </Link>
     );
   }
 
   return (
     <Link to={`/events/${event.id}`}>
-      <GlassCard interactive variant="elevated" className="overflow-hidden">
+      <Card variant="interactive" className="overflow-hidden">
         <div className="relative h-44 bg-muted">
           {event.image_url ? (
             <motion.img
               src={event.image_url}
               alt={event.title}
               className="h-full w-full object-cover"
-              initial={{ scale: 1 }}
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.03 }}
               transition={{ duration: 0.4 }}
             />
           ) : (
-            <div className="h-full w-full bg-gradient-to-br from-primary/20 via-accent/10 to-primary/5 flex items-center justify-center">
+            <div className="h-full w-full bg-gradient-to-br from-primary/10 via-accent/5 to-primary/5 flex items-center justify-center">
               <Calendar className="h-14 w-14 text-primary/30" />
             </div>
           )}
           
           {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-card/90 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-card/95 via-transparent to-transparent" />
           
           {/* Badges */}
           <div className="absolute top-3 left-3 right-3 flex justify-between">
             <div className="flex gap-2">
               {event.category && (
-                <Badge variant="secondary" className="backdrop-blur-sm bg-card/80 text-xs font-medium">
+                <Badge variant="secondary" className="backdrop-blur-sm bg-card/80 text-xs">
                   {event.category}
                 </Badge>
               )}
@@ -105,7 +109,7 @@ export function EventCard({ event, participantCount = 0, variant = 'default', is
               )}
             </div>
             {event.allow_come_alone && (
-              <Badge className="bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/25 text-xs">
+              <Badge variant="default" className="shadow-sm text-xs">
                 ✨ Join Alone
               </Badge>
             )}
@@ -113,14 +117,14 @@ export function EventCard({ event, participantCount = 0, variant = 'default', is
           
           {/* Date badge */}
           <div className="absolute bottom-3 left-3">
-            <div className="bg-card/95 backdrop-blur-sm rounded-lg px-3 py-1.5 shadow-md">
+            <div className="bg-card/95 backdrop-blur-sm rounded-lg px-3 py-1.5 shadow-sm">
               <p className="text-xs font-semibold text-primary">{getDateLabel()}</p>
               <p className="text-xs text-muted-foreground">{format(eventDate, 'h:mm a')}</p>
             </div>
           </div>
         </div>
         
-        <div className="p-4 pt-3">
+        <div className="p-4">
           <h3 className="font-semibold text-lg line-clamp-1 mb-2">{event.title}</h3>
           
           <div className="flex items-center justify-between">
@@ -141,7 +145,7 @@ export function EventCard({ event, participantCount = 0, variant = 'default', is
             </div>
           </div>
         </div>
-      </GlassCard>
+      </Card>
     </Link>
   );
 }

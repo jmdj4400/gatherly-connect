@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Users, Calendar, Sparkles, ArrowRight, MapPin, ChevronRight } from 'lucide-react';
+import { Users, Calendar, Sparkles, ArrowRight, MapPin, ChevronRight, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card } from '@/components/ui/card';
 import { EventCard } from '@/components/events/EventCard';
 import { BottomNav } from '@/components/layout/BottomNav';
-import { GlassCard } from '@/components/ui/glass-card';
-import { StaggerContainer, StaggerItem, buttonTapVariants } from '@/components/ui/page-transition';
-import { SkeletonLoader, PageLoader } from '@/components/ui/loading-spinner';
+import { StaggerContainer, StaggerItem, FadeIn } from '@/components/ui/page-transition';
+import { Skeleton, SkeletonCard } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import heroImage from '@/assets/hero-gathering.jpg';
@@ -31,19 +32,16 @@ const features = [
     icon: Calendar,
     title: 'Find Events',
     description: 'Discover events happening near you that match your interests',
-    gradient: 'from-primary/20 to-primary/5',
   },
   {
     icon: Users,
     title: 'Join Alone',
-    description: "Press 'Join Alone' and we'll match you with 2-5 compatible people",
-    gradient: 'from-accent/30 to-accent/5',
+    description: "Press 'Join Alone' and get matched with 2-5 compatible people",
   },
   {
     icon: Sparkles,
     title: 'Meet Your Group',
     description: 'Chat with your group before the event and meet up together',
-    gradient: 'from-primary/15 to-accent/10',
   },
 ];
 
@@ -82,29 +80,30 @@ export default function Index() {
     return (
       <div className="min-h-screen bg-background overflow-hidden">
         {/* Hero Section */}
-        <div className="relative h-[75vh] overflow-hidden">
+        <div className="relative h-[70vh] min-h-[500px] overflow-hidden">
           <motion.img
             src={heroImage}
             alt="People gathering at a social event"
             className="h-full w-full object-cover"
             initial={{ scale: 1.1 }}
             animate={{ scale: 1 }}
-            transition={{ duration: 1.2, ease: 'easeOut' }}
+            transition={{ duration: 1.4, ease: 'easeOut' }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-transparent" />
           
-          <div className="absolute bottom-0 left-0 right-0 p-6 pb-10">
-            <StaggerContainer>
+          <div className="absolute bottom-0 left-0 right-0 p-6 pb-12">
+            <StaggerContainer className="max-w-lg mx-auto md:max-w-xl">
               <StaggerItem>
-                <Badge className="mb-4 bg-primary/90 backdrop-blur-sm shadow-lg px-4 py-1.5 text-sm font-medium">
-                  ✨ Join events alone, leave with friends
+                <Badge variant="soft" className="mb-4 px-4 py-1.5 text-sm">
+                  <Zap className="h-3.5 w-3.5 mr-1" />
+                  Join events alone, leave with friends
                 </Badge>
               </StaggerItem>
               
               <StaggerItem>
-                <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 leading-[1.1]">
+                <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 leading-[1.1] text-balance">
                   Meet new people at{' '}
-                  <span className="text-primary">events you love</span>
+                  <span className="gradient-brand-text">events you love</span>
                 </h1>
               </StaggerItem>
               
@@ -115,35 +114,24 @@ export default function Index() {
               </StaggerItem>
               
               <StaggerItem>
-                <div className="flex flex-col gap-3">
-                  <motion.div
-                    variants={buttonTapVariants}
-                    initial="initial"
-                    whileTap="tap"
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    size="xl"
+                    variant="gradient"
+                    className="w-full sm:w-auto"
+                    onClick={() => navigate('/auth')}
                   >
-                    <Button
-                      size="lg"
-                      className="w-full h-14 text-lg font-semibold shadow-lg shadow-primary/25"
-                      onClick={() => navigate('/auth')}
-                    >
-                      Get Started Free
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </Button>
-                  </motion.div>
-                  <motion.div
-                    variants={buttonTapVariants}
-                    initial="initial"
-                    whileTap="tap"
+                    Get Started Free
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="xl"
+                    className="w-full sm:w-auto"
+                    onClick={() => navigate('/explore')}
                   >
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="w-full h-14 backdrop-blur-sm bg-card/50"
-                      onClick={() => navigate('/explore')}
-                    >
-                      Browse Events
-                    </Button>
-                  </motion.div>
+                    Browse Events
+                  </Button>
                 </div>
               </StaggerItem>
             </StaggerContainer>
@@ -151,127 +139,108 @@ export default function Index() {
         </div>
 
         {/* Features */}
-        <div className="px-6 py-12 space-y-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-2xl font-bold tracking-tight mb-2">How it works</h2>
-            <p className="text-muted-foreground">Three simple steps to make new friends</p>
-          </motion.div>
+        <div className="px-6 py-16 max-w-lg mx-auto md:max-w-3xl">
+          <FadeIn className="text-center mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3">
+              How it works
+            </h2>
+            <p className="text-muted-foreground">
+              Three simple steps to make new friends
+            </p>
+          </FadeIn>
           
-          <div className="grid gap-4">
+          <div className="grid gap-6 md:grid-cols-3">
             {features.map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <GlassCard variant="elevated" className="p-5">
-                  <div className="flex items-start gap-4">
-                    <div className={`h-14 w-14 rounded-2xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center flex-shrink-0`}>
+              <FadeIn key={feature.title} delay={0.1 * index}>
+                <Card variant="elevated" className="p-6 h-full">
+                  <div className="flex flex-col items-center text-center md:items-start md:text-left">
+                    <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
                       <feature.icon className="h-7 w-7 text-primary" />
                     </div>
-                    <div className="flex-1 pt-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                          Step {index + 1}
-                        </span>
-                      </div>
-                      <h3 className="font-semibold text-lg mb-1">{feature.title}</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                        Step {index + 1}
+                      </span>
                     </div>
+                    <h3 className="font-semibold text-lg mb-2">{feature.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {feature.description}
+                    </p>
                   </div>
-                </GlassCard>
-              </motion.div>
+                </Card>
+              </FadeIn>
             ))}
           </div>
         </div>
 
         {/* Sample Events */}
         {upcomingEvents.length > 0 && (
-          <div className="px-6 pb-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="flex items-center justify-between mb-6"
-            >
+          <div className="px-6 pb-12 max-w-lg mx-auto md:max-w-3xl">
+            <FadeIn className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-2xl font-bold tracking-tight">Upcoming Events</h2>
                 <p className="text-muted-foreground text-sm">Events you can join today</p>
               </div>
-              <Link to="/explore" className="text-primary font-medium flex items-center gap-1 hover:gap-2 transition-all">
-                See all <ChevronRight className="h-4 w-4" />
-              </Link>
-            </motion.div>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/explore" className="flex items-center gap-1">
+                  See all <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </FadeIn>
             
-            <div className="grid gap-4">
-              {upcomingEvents.slice(0, 3).map((event, index) => (
-                <motion.div
-                  key={event.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                >
+            <StaggerContainer className="grid gap-4">
+              {upcomingEvents.slice(0, 3).map((event) => (
+                <StaggerItem key={event.id}>
                   <EventCard event={event} />
-                </motion.div>
+                </StaggerItem>
               ))}
-            </div>
+            </StaggerContainer>
           </div>
         )}
 
         {/* Footer CTA */}
-        <div className="p-6 pb-12">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-          >
-            <GlassCard variant="elevated" className="p-8 text-center bg-gradient-to-br from-primary/10 via-card to-accent/10">
-              <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
+        <div className="p-6 pb-16 max-w-lg mx-auto">
+          <FadeIn>
+            <Card variant="elevated" className="p-8 text-center bg-gradient-to-br from-primary/5 via-card to-accent/5">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
                 <Users className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-2xl font-bold mb-2">Ready to start gathering?</h3>
+              <h3 className="text-2xl font-bold mb-3">Ready to start gathering?</h3>
               <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
                 Join thousands of people making new friends at events they love
               </p>
-              <motion.div
-                variants={buttonTapVariants}
-                initial="initial"
-                whileTap="tap"
-              >
-                <Button onClick={() => navigate('/auth')} size="lg" className="font-semibold shadow-lg shadow-primary/25">
-                  Create Free Account
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </motion.div>
-            </GlassCard>
-          </motion.div>
+              <Button onClick={() => navigate('/auth')} size="lg" variant="gradient">
+                Create Free Account
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Card>
+          </FadeIn>
         </div>
       </div>
     );
   }
 
   if (loading) {
-    return <PageLoader message="Loading your feed..." />;
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <Sparkles className="h-6 w-6 text-primary" />
+          </div>
+          <p className="text-muted-foreground">Loading your feed...</p>
+        </div>
+      </div>
+    );
   }
 
   // Authenticated home feed
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-lg border-b border-border/50">
-        <div className="p-4">
+      <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-xl border-b border-border/30">
+        <div className="px-4 py-4">
           <div className="flex items-center justify-between">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-            >
+            <FadeIn>
               <h1 className="text-2xl font-bold tracking-tight">
                 Hey, {profile?.display_name?.split(' ')[0] || 'there'} 👋
               </h1>
@@ -281,37 +250,30 @@ export default function Index() {
                   <span>{profile.city}</span>
                 </div>
               )}
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-            >
+            </FadeIn>
+            <FadeIn delay={0.1}>
               <Link to="/profile">
-                <Avatar className="h-11 w-11 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
+                <Avatar ring size="lg">
                   <AvatarImage src={profile?.avatar_url || undefined} />
-                  <AvatarFallback className="bg-primary/20 text-primary font-medium">
+                  <AvatarFallback>
                     {profile?.display_name?.[0] || '?'}
                   </AvatarFallback>
                 </Avatar>
               </Link>
-            </motion.div>
+            </FadeIn>
           </div>
         </div>
       </header>
 
       {/* Onboarding reminder */}
       {profile && !profile.onboarding_completed && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mx-4 mt-4"
-        >
-          <GlassCard variant="elevated" className="p-4 bg-gradient-to-r from-primary/10 to-accent/10">
+        <FadeIn className="mx-4 mt-4">
+          <Card variant="elevated" className="p-4 bg-gradient-to-r from-primary/5 to-accent/5">
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 rounded-xl bg-primary/20 flex items-center justify-center flex-shrink-0">
+              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                 <Sparkles className="h-6 w-6 text-primary" />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <h3 className="font-semibold">Complete your profile</h3>
                 <p className="text-sm text-muted-foreground">
                   Help us match you with the right people
@@ -321,12 +283,12 @@ export default function Index() {
                 Continue
               </Button>
             </div>
-          </GlassCard>
-        </motion.div>
+          </Card>
+        </FadeIn>
       )}
 
       {/* Content */}
-      <main className="p-4 space-y-6 mt-2">
+      <main className="px-4 py-6 space-y-8">
         {/* Upcoming Events */}
         <section>
           <div className="flex items-center justify-between mb-4">
@@ -334,39 +296,29 @@ export default function Index() {
               <h2 className="text-lg font-bold">Events for You</h2>
               <p className="text-xs text-muted-foreground">Based on your interests</p>
             </div>
-            <Link to="/explore" className="text-primary text-sm font-medium flex items-center gap-1 hover:gap-2 transition-all">
-              See all <ChevronRight className="h-4 w-4" />
-            </Link>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/explore" className="flex items-center gap-1">
+                See all <ChevronRight className="h-4 w-4" />
+              </Link>
+            </Button>
           </div>
 
           {loadingEvents ? (
             <div className="space-y-4">
               {[1, 2].map((i) => (
-                <GlassCard key={i} className="p-4">
-                  <div className="flex gap-4">
-                    <SkeletonLoader className="h-24 w-24 rounded-xl" />
-                    <div className="flex-1 space-y-2">
-                      <SkeletonLoader variant="text" className="w-3/4" />
-                      <SkeletonLoader variant="text" className="w-1/2" />
-                      <SkeletonLoader variant="text" className="w-1/3" />
-                    </div>
-                  </div>
-                </GlassCard>
+                <SkeletonCard key={i} />
               ))}
             </div>
           ) : upcomingEvents.length === 0 ? (
-            <GlassCard variant="subtle" className="p-8 text-center">
-              <div className="w-14 h-14 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4">
-                <Calendar className="h-7 w-7 text-muted-foreground" />
-              </div>
-              <h3 className="font-semibold mb-1">No events yet</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Check back soon for events in your area
-              </p>
-              <Button variant="outline" size="sm" onClick={() => navigate('/explore')}>
-                Browse All Events
-              </Button>
-            </GlassCard>
+            <EmptyState
+              icon={Calendar}
+              title="No events yet"
+              description="Check back soon for events in your area"
+              action={{
+                label: "Browse All Events",
+                onClick: () => navigate('/explore'),
+              }}
+            />
           ) : (
             <StaggerContainer className="grid gap-4">
               {upcomingEvents.map((event) => (

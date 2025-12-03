@@ -15,8 +15,8 @@ export function BottomNav() {
   const location = useLocation();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/50 bg-card/80 backdrop-blur-xl supports-[backdrop-filter]:bg-card/60">
-      <div className="flex h-18 items-center justify-around px-2 py-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border/30">
+      <div className="flex h-16 items-center justify-around px-2">
         {navItems.map((item) => {
           const isActive = location.pathname === item.href || 
             (item.href !== '/' && location.pathname.startsWith(item.href));
@@ -25,7 +25,7 @@ export function BottomNav() {
             <Link
               key={item.href}
               to={item.href}
-              className="relative flex flex-col items-center justify-center gap-1 px-4 py-2 rounded-xl transition-colors"
+              className="relative flex flex-col items-center justify-center gap-0.5 px-4 py-2 rounded-xl transition-all duration-200"
             >
               {isActive && (
                 <motion.div
@@ -42,22 +42,23 @@ export function BottomNav() {
               <motion.div
                 animate={{
                   scale: isActive ? 1.1 : 1,
-                  y: isActive ? -2 : 0,
+                  y: isActive ? -1 : 0,
                 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 25 }}
               >
                 <item.icon
                   className={cn(
-                    "h-5 w-5 transition-colors",
+                    "h-5 w-5 transition-colors duration-200",
                     isActive
-                      ? "text-primary stroke-[2.5px]"
+                      ? "text-primary"
                       : "text-muted-foreground"
                   )}
+                  strokeWidth={isActive ? 2.5 : 2}
                 />
               </motion.div>
               <span
                 className={cn(
-                  "text-[11px] font-medium transition-colors",
+                  "text-[10px] font-medium transition-colors duration-200",
                   isActive ? "text-primary" : "text-muted-foreground"
                 )}
               >
@@ -69,7 +70,7 @@ export function BottomNav() {
       </div>
       
       {/* Safe area padding for iOS */}
-      <div className="h-safe-area-inset-bottom bg-card/80" />
+      <div className="h-[env(safe-area-inset-bottom)] bg-card/95" />
     </nav>
   );
 }
