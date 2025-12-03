@@ -25,10 +25,30 @@ serve(async (req) => {
       );
     }
 
-    // Store subscription in database (you'd need to create this table)
-    // For now, we'll just log it
-    console.log(`[push-subscribe] User ${user_id} subscribed to push notifications`);
-    console.log(`[push-subscribe] Endpoint: ${subscription.endpoint?.substring(0, 50)}...`);
+    console.log(`[push-subscribe] User ${user_id} subscribing to push notifications`);
+
+    // Upsert subscription in database
+    const { error } = await supabase
+      .from('push_subscriptions')
+      .upsert({
+        user_id,
+        endpoint: subscription.endpoint,
+        p256dh: subscription.keys?.p256dh,
+        auth: subscription.keys?.auth,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'user_id,endpoint'
+      });
+
+    if (error) {
+      console.error('[push-subscribe] Database error:', error);
+      return new Response(
+        JSON.stringify({ error: 'Failed to save subscription' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`[push-subscribe] Subscription saved for user ${user_id}`);
 
     return new Response(
       JSON.stringify({ success: true }),
@@ -36,7 +56,7 @@ serve(async (req) => {
     );
 
   } catch (error: unknown) {
-    console.error('Push subscribe error:', error);
+    console.error('[push-subscribe] Error:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
       JSON.stringify({ error: message }),
