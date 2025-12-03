@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, Plus, Calendar, Repeat, ChevronRight, 
-  Instagram, Edit2, Trash2, MoreVertical, Users 
+  Instagram, Edit2, Trash2, MoreVertical, Users, Code 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GlassCard } from '@/components/ui/glass-card';
@@ -174,6 +174,10 @@ export default function OrganizerEvents() {
           <Button onClick={() => setCreateModalOpen(true)} size="sm">
             <Plus className="h-4 w-4 mr-1" />
             Nyt Event
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => navigate('/organizer/widgets')}>
+            <Code className="h-4 w-4 mr-1" />
+            Widgets
           </Button>
         </div>
       </header>

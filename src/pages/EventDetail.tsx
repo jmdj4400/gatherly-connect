@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Calendar, MapPin, Users, Clock, Share2, Heart, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,7 @@ interface Participant {
 export default function EventDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { user, profile } = useAuth();
   
@@ -50,15 +51,26 @@ export default function EventDetail() {
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
   const [checkingIn, setCheckingIn] = useState(false);
+  const [autoJoinAttempted, setAutoJoinAttempted] = useState(false);
   
   const { eventVibeScore, loading: vibeLoading } = useVibeScore(id);
   const { checkIn } = useEngagement();
+
+  const autoJoin = searchParams.get('autojoin') === 'true';
 
   useEffect(() => {
     if (id) {
       fetchEventDetails();
     }
   }, [id, user]);
+
+  // Handle auto-join from deep link
+  useEffect(() => {
+    if (autoJoin && !autoJoinAttempted && !loading && event && user && profile?.onboarding_completed && !isJoined) {
+      setAutoJoinAttempted(true);
+      handleJoinAlone();
+    }
+  }, [autoJoin, autoJoinAttempted, loading, event, user, profile, isJoined]);
 
   const fetchEventDetails = async () => {
     setLoading(true);
