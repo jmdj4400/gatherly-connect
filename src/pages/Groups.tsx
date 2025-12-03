@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Users, Calendar, MapPin, MessageCircle, ChevronRight } from 'lucide-react';
+import { Users, Calendar, MapPin, MessageCircle, ChevronRight, Share2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { BottomNav } from '@/components/layout/BottomNav';
+import { ShareMomentModal } from '@/components/share/ShareMomentModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
 import { format } from 'date-fns';
@@ -20,6 +22,7 @@ interface GroupWithDetails {
     title: string;
     starts_at: string;
     venue_name: string | null;
+    image_url: string | null;
   };
   members: {
     id: string;
@@ -33,6 +36,8 @@ export default function Groups() {
   const { user } = useAuth();
   const [groups, setGroups] = useState<GroupWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [selectedGroup, setSelectedGroup] = useState<GroupWithDetails | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -74,7 +79,7 @@ export default function Groups() {
       // Get event details
       const { data: eventData } = await supabase
         .from('events')
-        .select('id, title, starts_at, venue_name')
+        .select('id, title, starts_at, venue_name, image_url')
         .eq('id', group.event_id)
         .single();
 
@@ -97,7 +102,7 @@ export default function Groups() {
         status: group.status,
         meet_spot: group.meet_spot,
         meet_time: group.meet_time,
-        event: eventData || { id: '', title: 'Unknown Event', starts_at: '', venue_name: null },
+        event: eventData || { id: '', title: 'Unknown Event', starts_at: '', venue_name: null, image_url: null },
         members
       });
     }
@@ -227,9 +232,26 @@ export default function Groups() {
                         ))}
                       </div>
                       
-                      <div className="flex items-center gap-1 text-primary">
-                        <MessageCircle className="h-4 w-4" />
-                        <span className="text-sm font-medium">Chat</span>
+                      <div className="flex items-center gap-2">
+                        {/* Show Share button for past events */}
+                        {new Date(group.event.starts_at) < new Date() && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedGroup(group);
+                              setShareModalOpen(true);
+                            }}
+                          >
+                            <Share2 className="h-4 w-4 mr-1" />
+                            Share
+                          </Button>
+                        )}
+                        <div className="flex items-center gap-1 text-primary">
+                          <MessageCircle className="h-4 w-4" />
+                          <span className="text-sm font-medium">Chat</span>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -239,6 +261,19 @@ export default function Groups() {
           </div>
         )}
       </main>
+
+      {/* Share Moment Modal */}
+      {selectedGroup && (
+        <ShareMomentModal
+          open={shareModalOpen}
+          onOpenChange={setShareModalOpen}
+          eventTitle={selectedGroup.event.title}
+          eventImageUrl={selectedGroup.event.image_url}
+          eventDate={selectedGroup.event.starts_at}
+          eventId={selectedGroup.event.id}
+          members={selectedGroup.members}
+        />
+      )}
 
       <BottomNav />
     </div>
