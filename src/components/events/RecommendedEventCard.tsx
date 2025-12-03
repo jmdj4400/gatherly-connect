@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Calendar, MapPin, Sparkles } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { GlassCard } from '@/components/ui/glass-card';
 import { format } from 'date-fns';
 import { RecommendedEvent } from '@/hooks/useRecommendedEvents';
 import { cn } from '@/lib/utils';
@@ -16,9 +16,9 @@ export function RecommendedEventCard({ event, onClick, className }: RecommendedE
   const eventDate = new Date(event.starts_at);
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-500';
+    if (score >= 80) return 'text-success';
     if (score >= 60) return 'text-primary';
-    if (score >= 40) return 'text-yellow-500';
+    if (score >= 40) return 'text-warning';
     return 'text-muted-foreground';
   };
 
@@ -29,7 +29,7 @@ export function RecommendedEventCard({ event, onClick, className }: RecommendedE
       onClick={onClick}
       className={cn('cursor-pointer', className)}
     >
-      <Card className="overflow-hidden border-0 shadow-md hover:shadow-lg transition-shadow bg-card">
+      <GlassCard variant="elevated" className="overflow-hidden p-0">
         <div className="relative h-32">
           {event.image_url ? (
             <img
@@ -38,14 +38,14 @@ export function RecommendedEventCard({ event, onClick, className }: RecommendedE
               className="h-full w-full object-cover"
             />
           ) : (
-            <div className="h-full w-full bg-gradient-to-br from-primary/30 to-accent/30" />
+            <div className="h-full w-full bg-gradient-to-br from-primary/20 to-accent/20" />
           )}
           
           {/* Match Score Badge */}
-          <div className="absolute top-2 right-2">
+          <div className="absolute top-2.5 right-2.5">
             <Badge 
               className={cn(
-                'bg-card/90 backdrop-blur-sm border-0 font-semibold',
+                'bg-card/95 backdrop-blur-sm border-0 font-semibold shadow-soft',
                 getScoreColor(event.recommendation_score)
               )}
             >
@@ -56,18 +56,18 @@ export function RecommendedEventCard({ event, onClick, className }: RecommendedE
 
           {/* Category Badge */}
           {event.category && (
-            <div className="absolute bottom-2 left-2">
-              <Badge variant="secondary" className="bg-card/90 backdrop-blur-sm">
+            <div className="absolute bottom-2.5 left-2.5">
+              <Badge variant="secondary" className="bg-card/95 backdrop-blur-sm shadow-soft">
                 {event.category}
               </Badge>
             </div>
           )}
         </div>
 
-        <CardContent className="p-4">
+        <div className="p-4">
           <h3 className="font-semibold line-clamp-1 mb-2">{event.title}</h3>
           
-          <div className="space-y-1 text-sm text-muted-foreground mb-3">
+          <div className="space-y-1.5 text-sm text-muted-foreground mb-3">
             <div className="flex items-center gap-2">
               <Calendar className="h-3.5 w-3.5" />
               <span>{format(eventDate, 'EEE, MMM d · h:mm a')}</span>
@@ -81,22 +81,22 @@ export function RecommendedEventCard({ event, onClick, className }: RecommendedE
           </div>
 
           {/* Why Recommended */}
-          <div className="pt-3 border-t">
-            <p className="text-xs text-muted-foreground mb-1">Why recommended:</p>
-            <div className="flex flex-wrap gap-1">
+          <div className="pt-3 border-t border-border/50">
+            <p className="text-xs text-muted-foreground mb-2 font-medium">Why recommended:</p>
+            <div className="flex flex-wrap gap-1.5">
               {event.recommendation_reasons.map((reason, idx) => (
                 <Badge 
                   key={idx} 
                   variant="outline" 
-                  className="text-xs font-normal bg-primary/5 border-primary/20"
+                  className="text-[11px] font-normal bg-primary/5 border-primary/20"
                 >
                   {reason}
                 </Badge>
               ))}
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </GlassCard>
     </motion.div>
   );
 }
