@@ -10,6 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useRealtimeChat, Message, TypingUser } from '@/hooks/useRealtimeChat';
+import { useCompatibilityMatrix } from '@/hooks/useVibeScore';
+import { BestMatchTag, VibeScoreBadge } from '@/components/ui/vibe-score-badge';
 import { format } from 'date-fns';
 
 interface GroupInfo {
@@ -36,8 +38,11 @@ export default function GroupChat() {
   const [newMessage, setNewMessage] = useState('');
   const [groupInfo, setGroupInfo] = useState<GroupInfo | null>(null);
   const [sending, setSending] = useState(false);
+  const [eventId, setEventId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const { bestMatch } = useCompatibilityMatrix(eventId || undefined);
 
   const {
     messages,
@@ -98,6 +103,17 @@ export default function GroupChat() {
       .single();
 
     if (groupData) {
+      // Get event ID for compatibility matrix
+      const { data: groupEventData } = await supabase
+        .from('micro_groups')
+        .select('event_id')
+        .eq('id', id)
+        .single();
+      
+      if (groupEventData?.event_id) {
+        setEventId(groupEventData.event_id);
+      }
+      
       // Get members
       const { data: membersData } = await supabase
         .from('micro_group_members')
@@ -199,12 +215,19 @@ export default function GroupChat() {
 
           <div className="flex -space-x-2">
             {groupInfo?.members.slice(0, 3).map((member) => (
-              <Avatar key={member.id} className="h-8 w-8 border-2 border-card">
-                <AvatarImage src={member.avatar_url || undefined} />
-                <AvatarFallback className="text-xs bg-primary/20 text-primary">
-                  {member.display_name?.[0] || '?'}
-                </AvatarFallback>
-              </Avatar>
+              <div key={member.id} className="relative">
+                <Avatar className="h-8 w-8 border-2 border-card">
+                  <AvatarImage src={member.avatar_url || undefined} />
+                  <AvatarFallback className="text-xs bg-primary/20 text-primary">
+                    {member.display_name?.[0] || '?'}
+                  </AvatarFallback>
+                </Avatar>
+                {bestMatch?.user_id === member.id && (
+                  <div className="absolute -top-1 -right-1">
+                    <BestMatchTag />
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </div>

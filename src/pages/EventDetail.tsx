@@ -9,6 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
 import { format } from 'date-fns';
+import { useVibeScore } from '@/hooks/useVibeScore';
+import { VibeScoreBadge } from '@/components/ui/vibe-score-badge';
 
 interface Event {
   id: string;
@@ -45,6 +47,8 @@ export default function EventDetail() {
   const [isJoined, setIsJoined] = useState(false);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(false);
+  
+  const { eventVibeScore, loading: vibeLoading } = useVibeScore(id);
 
   useEffect(() => {
     if (id) {
@@ -253,9 +257,14 @@ export default function EventDetail() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-card rounded-2xl p-6 shadow-lg"
         >
-          {event.category && (
-            <Badge className="mb-3">{event.category}</Badge>
-          )}
+          <div className="flex items-center justify-between mb-3">
+            {event.category && (
+              <Badge>{event.category}</Badge>
+            )}
+            {user && eventVibeScore !== null && !vibeLoading && (
+              <VibeScoreBadge score={eventVibeScore} size="md" />
+            )}
+          </div>
           
           <h1 className="text-2xl font-bold mb-4">{event.title}</h1>
 
