@@ -257,24 +257,28 @@ serve(async (req) => {
             });
           }
 
-          const { data: members, error } = await supabaseAdmin
+          // Fetch roles first, then fetch profiles separately to avoid FK issues
+          const { data: roles, error: rolesError } = await supabaseAdmin
             .from('user_roles')
-            .select(`
-              id,
-              user_id,
-              role,
-              created_at,
-              profiles:user_id (
-                id,
-                display_name,
-                email,
-                avatar_url
-              )
-            `)
+            .select('id, user_id, role, created_at')
             .eq('org_id', org_id)
             .in('role', ORG_ROLES);
 
-          if (error) throw error;
+          if (rolesError) throw rolesError;
+
+          // Fetch profiles for these users
+          const userIds = roles?.map(r => r.user_id) || [];
+          const { data: profiles } = await supabaseAdmin
+            .from('profiles')
+            .select('id, display_name, email, avatar_url')
+            .in('id', userIds);
+
+          // Combine the data
+          const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
+          const members = roles?.map(r => ({
+            ...r,
+            profiles: profilesMap.get(r.user_id) || null
+          })) || [];
 
           return new Response(JSON.stringify({ members, requester_role: requesterRole }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -292,46 +296,57 @@ serve(async (req) => {
             });
           }
 
+          // Fetch logs first
           const { data: logs, error } = await supabaseAdmin
             .from('org_activity_log')
-            .select(`
-              id,
-              action,
-              target_user_id,
-              metadata,
-              created_at,
-              profiles:user_id (
-                display_name,
-                email
-              )
-            `)
+            .select('id, action, user_id, target_user_id, metadata, created_at')
             .eq('org_id', org_id)
             .order('created_at', { ascending: false })
             .limit(limit);
 
           if (error) throw error;
 
-          return new Response(JSON.stringify({ logs }), {
+          // Fetch profiles for the user_ids
+          const userIds = [...new Set(logs?.map(l => l.user_id).filter(Boolean) || [])];
+          const { data: profiles } = await supabaseAdmin
+            .from('profiles')
+            .select('id, display_name, email')
+            .in('id', userIds);
+
+          const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
+          const logsWithProfiles = logs?.map(l => ({
+            ...l,
+            profiles: profilesMap.get(l.user_id) || null
+          })) || [];
+
+          return new Response(JSON.stringify({ logs: logsWithProfiles }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
 
         case 'get_user_orgs': {
-          const { data: orgs, error } = await supabaseAdmin
+          // Fetch roles first
+          const { data: roles, error: rolesError } = await supabaseAdmin
             .from('user_roles')
-            .select(`
-              role,
-              org_id,
-              orgs:org_id (
-                id,
-                name,
-                contact_email
-              )
-            `)
+            .select('role, org_id')
             .eq('user_id', user.id)
             .in('role', ORG_ROLES);
 
-          if (error) throw error;
+          if (rolesError) throw rolesError;
+
+          // Fetch orgs for these org_ids
+          const orgIds = roles?.map(r => r.org_id).filter(Boolean) || [];
+          const { data: orgsData } = await supabaseAdmin
+            .from('orgs')
+            .select('id, name, contact_email')
+            .in('id', orgIds);
+
+          const orgsMap = new Map(orgsData?.map(o => [o.id, o]) || []);
+          const orgs = roles?.map(r => ({
+            role: r.role,
+            org_id: r.org_id,
+            orgs: orgsMap.get(r.org_id) || null
+          })) || [];
 
           return new Response(JSON.stringify({ orgs }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },

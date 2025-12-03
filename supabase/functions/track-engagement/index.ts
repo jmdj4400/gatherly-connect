@@ -53,24 +53,71 @@ serve(async (req) => {
         });
       }
 
+      // Check for duplicate check-in
+      const { data: existingCheckIn } = await supabaseAdmin
+        .from('attendance_records')
+        .select('id, checked_in_at')
+        .eq('user_id', user.id)
+        .eq('event_id', event_id)
+        .maybeSingle();
+
+      if (existingCheckIn) {
+        console.log(`[track-engagement] Duplicate check-in blocked for user ${user.id} event ${event_id}`);
+        return new Response(JSON.stringify({ 
+          success: false, 
+          error: 'Already checked in',
+          checked_in_at: existingCheckIn.checked_in_at
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
       // Calculate minutes before start
       const eventStart = new Date(event.starts_at);
       const now = new Date();
       const minutesBefore = Math.round((eventStart.getTime() - now.getTime()) / 60000);
 
-      // Record attendance
+      // Validate check-in window: 30 min before to 60 min after event start
+      const minutesAfter = -minutesBefore;
+      if (minutesBefore > 30) {
+        return new Response(JSON.stringify({ 
+          error: 'Check-in not available yet. Come back closer to event time.',
+          minutes_until_checkin: minutesBefore - 30
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      if (minutesAfter > 60) {
+        return new Response(JSON.stringify({ 
+          error: 'Check-in window has expired. Event started over 1 hour ago.'
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      // Record attendance (no upsert since we checked for duplicates)
       const { error: attendanceError } = await supabaseAdmin
         .from('attendance_records')
-        .upsert({
+        .insert({
           user_id: user.id,
           event_id: event.id,
           org_id: event.host_org_id,
           minutes_before_start: minutesBefore
-        }, { onConflict: 'user_id,event_id' });
+        });
 
       if (attendanceError) {
         console.error('Attendance error:', attendanceError);
+        return new Response(JSON.stringify({ error: 'Failed to record attendance' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
       }
+
+      console.log(`[track-engagement] Check-in recorded: user=${user.id}, event=${event_id}, minutes_before=${minutesBefore}`);
 
       // Update streak if org exists
       if (event.host_org_id) {

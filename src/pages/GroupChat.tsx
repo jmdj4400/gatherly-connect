@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Send, Users, Wifi, WifiOff, Check, CheckCheck, Snowflake } from 'lucide-react';
+import { ArrowLeft, Send, Users, Wifi, WifiOff, Check, CheckCheck, Snowflake, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRealtimeChat, Message, TypingUser } from '@/hooks/useRealtimeChat';
 import { useCompatibilityMatrix } from '@/hooks/useVibeScore';
 import { BestMatchTag, VibeScoreBadge } from '@/components/ui/vibe-score-badge';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 
 interface GroupInfo {
   id: string;
@@ -51,6 +51,8 @@ export default function GroupChat() {
     isConnected,
     isOffline,
     isFrozen,
+    isMuted,
+    muteExpiresAt,
     sendMessage,
     sendTypingIndicator,
     markAsRead,
@@ -351,6 +353,16 @@ export default function GroupChat() {
 
       {/* Input */}
       <div className="sticky bottom-0 bg-background border-t p-4">
+        {/* Muted Banner */}
+        {isMuted && muteExpiresAt && (
+          <div className="flex items-center justify-center gap-2 text-amber-600 bg-amber-50 dark:bg-amber-900/20 rounded-lg py-2 px-4 mb-3">
+            <VolumeX className="h-4 w-4" />
+            <span className="text-sm">
+              You are muted for {formatDistanceToNow(muteExpiresAt)}
+            </span>
+          </div>
+        )}
+        
         {(isFrozen || groupInfo?.frozen) ? (
           <div className="flex items-center justify-center gap-2 text-muted-foreground py-2">
             <Snowflake className="h-4 w-4" />
@@ -360,17 +372,17 @@ export default function GroupChat() {
           <form onSubmit={handleSendMessage} className="flex gap-2">
             <Input
               ref={inputRef}
-              placeholder="Type a message..."
+              placeholder={isMuted ? "You are muted..." : "Type a message..."}
               value={newMessage}
               onChange={handleInputChange}
               className="flex-1 h-12"
-              disabled={sending}
+              disabled={sending || isMuted}
             />
             <Button
               type="submit"
               size="icon"
               className="h-12 w-12"
-              disabled={!newMessage.trim() || sending}
+              disabled={!newMessage.trim() || sending || isMuted}
             >
               <Send className="h-5 w-5" />
             </Button>

@@ -42,6 +42,8 @@ export function useRealtimeChat({ groupId, userId, userDisplayName, userAvatarUr
   const [isConnected, setIsConnected] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   const [isFrozen, setIsFrozen] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [muteExpiresAt, setMuteExpiresAt] = useState<Date | null>(null);
   
   const channelRef = useRef<RealtimeChannel | null>(null);
   const presenceChannelRef = useRef<RealtimeChannel | null>(null);
@@ -110,6 +112,27 @@ export function useRealtimeChat({ groupId, userId, userDisplayName, userAvatarUr
     }
   }, [groupId]);
 
+  // Check if user is muted
+  const checkMuteStatus = useCallback(async () => {
+    if (!userId || !groupId) return;
+    
+    const { data } = await supabase
+      .from('user_mutes')
+      .select('id, muted_until, reason')
+      .eq('user_id', userId)
+      .eq('group_id', groupId)
+      .gt('muted_until', new Date().toISOString())
+      .maybeSingle();
+
+    if (data) {
+      setIsMuted(true);
+      setMuteExpiresAt(new Date(data.muted_until));
+    } else {
+      setIsMuted(false);
+      setMuteExpiresAt(null);
+    }
+  }, [userId, groupId]);
+
   // Mark messages as read
   const markAsRead = useCallback(async (messageIds: string[]) => {
     if (messageIds.length === 0) return;
@@ -161,6 +184,11 @@ export function useRealtimeChat({ groupId, userId, userDisplayName, userAvatarUr
   const sendMessage = useCallback(async (content: string): Promise<{ success: boolean; error?: string }> => {
     if (isFrozen) {
       return { success: false, error: 'This group has been frozen by an administrator.' };
+    }
+
+    if (isMuted && muteExpiresAt) {
+      const minutesLeft = Math.ceil((muteExpiresAt.getTime() - Date.now()) / 60000);
+      return { success: false, error: `You are muted for ${minutesLeft} more minutes.` };
     }
 
     console.log('[RealtimeChat] Sending message:', content.substring(0, 50));
@@ -220,7 +248,7 @@ export function useRealtimeChat({ groupId, userId, userDisplayName, userAvatarUr
       console.error('[RealtimeChat] Send error:', error);
       return { success: false, error: 'Network error' };
     }
-  }, [groupId, userId, userDisplayName, userAvatarUrl, isFrozen]);
+  }, [groupId, userId, userDisplayName, userAvatarUrl, isFrozen, isMuted, muteExpiresAt]);
 
   // Subscribe to realtime updates
   useEffect(() => {
@@ -230,6 +258,7 @@ export function useRealtimeChat({ groupId, userId, userDisplayName, userAvatarUr
     
     fetchMessages();
     checkGroupStatus();
+    checkMuteStatus();
 
     // Message channel for postgres changes
     const messageChannel = supabase
@@ -345,7 +374,7 @@ export function useRealtimeChat({ groupId, userId, userDisplayName, userAvatarUr
         clearInterval(pollIntervalRef.current);
       }
     };
-  }, [groupId, userId, userDisplayName, userAvatarUrl, fetchMessages, checkGroupStatus]);
+  }, [groupId, userId, userDisplayName, userAvatarUrl, fetchMessages, checkGroupStatus, checkMuteStatus]);
 
   // Offline fallback polling
   useEffect(() => {
@@ -383,6 +412,8 @@ export function useRealtimeChat({ groupId, userId, userDisplayName, userAvatarUr
     isConnected,
     isOffline,
     isFrozen,
+    isMuted,
+    muteExpiresAt,
     sendMessage,
     sendTypingIndicator,
     markAsRead,
