@@ -8,6 +8,30 @@ const corsHeaders = {
 
 const ORG_ROLES = ['org_owner', 'org_admin', 'org_helper'];
 
+// Standardized error codes
+const ErrorCode = {
+  PERM: 'E.PERM',
+  ORG: 'E.ORG',
+  NOT_FOUND: 'E.NOT_FOUND',
+  VALIDATION: 'E.VALIDATION',
+  UNKNOWN: 'E.UNKNOWN',
+} as const;
+
+// Standardized response helper
+const respond = {
+  success: (data: unknown) => new Response(
+    JSON.stringify({ success: true, data, error: null }),
+    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  ),
+  error: (code: string, message: string, status = 400) => new Response(
+    JSON.stringify({ success: false, data: null, error: { code, message } }),
+    { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+  ),
+};
+
+// Billing-protected actions that org_admin cannot access
+const OWNER_ONLY_ACTIONS = ['update_billing', 'delete_org', 'transfer_ownership'];
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });

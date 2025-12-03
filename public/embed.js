@@ -15,6 +15,31 @@
   const SUPABASE_URL = 'https://yuabwnhulzhnoyvnvqrw.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1YWJ3bmh1bHpobm95dm52cXJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ3ODA0ODQsImV4cCI6MjA4MDM1NjQ4NH0.9PgsvW3zJ6YBiMLzGVTe1XkiJNlXMvzxB-ZgAnIEUWI';
 
+  // Rate limiting configuration
+  const RATE_LIMIT = {
+    maxRequests: 30,
+    windowMs: 60000, // 1 minute
+    requests: [],
+  };
+
+  // CORS allowlist - only allow from known origins
+  const ALLOWED_ORIGINS = [
+    'https://gatherly.app',
+    'http://localhost:8080',
+    'http://localhost:5173',
+  ];
+
+  // Check rate limit
+  function checkRateLimit() {
+    const now = Date.now();
+    RATE_LIMIT.requests = RATE_LIMIT.requests.filter(t => now - t < RATE_LIMIT.windowMs);
+    if (RATE_LIMIT.requests.length >= RATE_LIMIT.maxRequests) {
+      return false;
+    }
+    RATE_LIMIT.requests.push(now);
+    return true;
+  }
+
   // Shared styles
   const sharedStyles = `
     * {
@@ -56,50 +81,102 @@
       width: 20px;
       height: 20px;
     }
+    .gatherly-btn.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+    .gatherly-frozen-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      background: rgba(234, 88, 12, 0.1);
+      color: var(--primary);
+      font-size: 12px;
+      font-weight: 500;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    .gatherly-error {
+      color: #ef4444;
+      font-size: 12px;
+      padding: 8px;
+      text-align: center;
+    }
   `;
 
-  // Fetch event data from Supabase
+  // Fetch event data from Supabase with rate limiting
   async function fetchEvent(eventId) {
-    const response = await fetch(
-      `${SUPABASE_URL}/rest/v1/events?id=eq.${eventId}&select=*`,
-      {
-        headers: {
-          'apikey': SUPABASE_ANON_KEY,
-          'Content-Type': 'application/json'
+    if (!checkRateLimit()) {
+      console.warn('[Gatherly] Rate limit exceeded');
+      return { error: 'rate_limit' };
+    }
+
+    try {
+      const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/events?id=eq.${eventId}&select=id,title,starts_at,freeze_hours_before`,
+        {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Content-Type': 'application/json'
+          }
         }
-      }
-    );
-    const data = await response.json();
-    return data[0] || null;
+      );
+      const data = await response.json();
+      return data[0] || null;
+    } catch (err) {
+      console.error('[Gatherly] Fetch error:', err);
+      return null;
+    }
   }
 
-  // Fetch events by org handle
+  // Fetch events by org handle with rate limiting
   async function fetchOrgEvents(orgHandle, limit = 5) {
-    // First get org by handle
-    const orgResponse = await fetch(
-      `${SUPABASE_URL}/rest/v1/orgs?org_handle=eq.${orgHandle}&select=id,name`,
-      {
-        headers: {
-          'apikey': SUPABASE_ANON_KEY,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-    const orgs = await orgResponse.json();
-    if (!orgs[0]) return [];
+    if (!checkRateLimit()) {
+      console.warn('[Gatherly] Rate limit exceeded');
+      return [];
+    }
 
-    // Then get upcoming events
-    const now = new Date().toISOString();
-    const eventsResponse = await fetch(
-      `${SUPABASE_URL}/rest/v1/events?host_org_id=eq.${orgs[0].id}&starts_at=gte.${now}&order=starts_at.asc&limit=${limit}&select=id,title,starts_at,venue_name,image_url,category`,
-      {
-        headers: {
-          'apikey': SUPABASE_ANON_KEY,
-          'Content-Type': 'application/json'
+    try {
+      // First get org by handle
+      const orgResponse = await fetch(
+        `${SUPABASE_URL}/rest/v1/orgs?org_handle=eq.${orgHandle}&select=id,name`,
+        {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Content-Type': 'application/json'
+          }
         }
-      }
-    );
-    return await eventsResponse.json();
+      );
+      const orgs = await orgResponse.json();
+      if (!orgs[0]) return [];
+
+      // Then get upcoming events
+      const now = new Date().toISOString();
+      const eventsResponse = await fetch(
+        `${SUPABASE_URL}/rest/v1/events?host_org_id=eq.${orgs[0].id}&starts_at=gte.${now}&order=starts_at.asc&limit=${limit}&select=id,title,starts_at,venue_name,image_url,category,freeze_hours_before`,
+        {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      return await eventsResponse.json();
+    } catch (err) {
+      console.error('[Gatherly] Fetch error:', err);
+      return [];
+    }
+  }
+
+  // Check if event is frozen
+  function isEventFrozen(event) {
+    if (!event || !event.starts_at) return false;
+    const freezeHours = event.freeze_hours_before || 24;
+    const startsAt = new Date(event.starts_at);
+    const freezeTime = new Date(startsAt.getTime() - freezeHours * 60 * 60 * 1000);
+    return new Date() >= freezeTime;
   }
 
   // Format date
@@ -132,6 +209,7 @@
 
   // Users icon SVG
   const usersIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`;
+  const lockIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
 
   // ====== JOIN ALONE BUTTON WIDGET ======
   class GatherlyJoinWidget extends HTMLElement {
@@ -146,17 +224,22 @@
       const theme = this.getAttribute('theme') || 'light';
 
       if (!eventId) {
-        this.shadowRoot.innerHTML = '<p style="color:red;">Missing event-id attribute</p>';
+        this.shadowRoot.innerHTML = '<p class="gatherly-error">Missing event-id attribute</p>';
         return;
       }
 
       const event = await fetchEvent(eventId);
+      if (event?.error === 'rate_limit') {
+        this.shadowRoot.innerHTML = '<p class="gatherly-error">Too many requests. Please wait.</p>';
+        return;
+      }
       if (!event) {
-        this.shadowRoot.innerHTML = '<p style="color:#666;">Event not found</p>';
+        this.shadowRoot.innerHTML = '<p class="gatherly-error">Event not found</p>';
         return;
       }
 
-      const joinUrl = `${GATHERLY_BASE_URL}/event/${eventId}?autojoin=true`;
+      const frozen = isEventFrozen(event);
+      const joinUrl = `${GATHERLY_BASE_URL}/event/${eventId}${frozen ? '' : '?autojoin=true'}`;
 
       this.shadowRoot.innerHTML = `
         <style>
@@ -171,9 +254,12 @@
           ` : ''}
         </style>
         <div class="gatherly-widget">
-          <a href="${joinUrl}" target="_blank" class="gatherly-btn">
+          ${frozen ? `
+            <div class="gatherly-frozen-badge">${lockIcon} Groups Finalized</div>
+          ` : ''}
+          <a href="${joinUrl}" target="_blank" class="gatherly-btn ${frozen ? 'disabled' : ''}">
             ${usersIcon}
-            ${buttonText}
+            ${frozen ? 'View Event' : buttonText}
           </a>
         </div>
       `;
@@ -193,13 +279,17 @@
       const theme = this.getAttribute('theme') || 'light';
 
       if (!eventId) {
-        this.shadowRoot.innerHTML = '<p style="color:red;">Missing event-id attribute</p>';
+        this.shadowRoot.innerHTML = '<p class="gatherly-error">Missing event-id attribute</p>';
         return;
       }
 
       const event = await fetchEvent(eventId);
+      if (event?.error === 'rate_limit') {
+        this.shadowRoot.innerHTML = '<p class="gatherly-error">Too many requests. Please wait.</p>';
+        return;
+      }
       if (!event) {
-        this.shadowRoot.innerHTML = '<p style="color:#666;">Event not found</p>';
+        this.shadowRoot.innerHTML = '<p class="gatherly-error">Event not found</p>';
         return;
       }
 
@@ -215,7 +305,8 @@
 
     render() {
       const countdown = getCountdown(this.event.starts_at);
-      const joinUrl = `${GATHERLY_BASE_URL}/event/${this.event.id}?autojoin=true`;
+      const frozen = isEventFrozen(this.event);
+      const joinUrl = `${GATHERLY_BASE_URL}/event/${this.event.id}${frozen ? '' : '?autojoin=true'}`;
 
       this.shadowRoot.innerHTML = `
         <style>
@@ -272,6 +363,9 @@
         <div class="gatherly-widget">
           <div class="countdown-container">
             <div class="event-title">${this.event.title}</div>
+            ${frozen ? `
+              <div class="gatherly-frozen-badge" style="justify-content: center; margin: 0 auto 12px;">${lockIcon} Groups Finalized</div>
+            ` : ''}
             ${countdown.expired ? `
               <p class="expired-text">Event has started!</p>
             ` : `
@@ -294,9 +388,9 @@
                 </div>
               </div>
             `}
-            <a href="${joinUrl}" target="_blank" class="gatherly-btn">
+            <a href="${joinUrl}" target="_blank" class="gatherly-btn ${frozen ? 'disabled' : ''}">
               ${usersIcon}
-              Join Alone
+              ${frozen ? 'View Event' : 'Join Alone'}
             </a>
           </div>
         </div>
@@ -317,7 +411,7 @@
       const theme = this.getAttribute('theme') || 'light';
 
       if (!orgHandle) {
-        this.shadowRoot.innerHTML = '<p style="color:red;">Missing org-handle attribute</p>';
+        this.shadowRoot.innerHTML = '<p class="gatherly-error">Missing org-handle attribute</p>';
         return;
       }
 
@@ -361,6 +455,9 @@
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
           }
+          .event-card.frozen {
+            opacity: 0.7;
+          }
           .event-image {
             width: 100%;
             height: 100px;
@@ -393,6 +490,10 @@
             border-radius: 4px;
             margin-top: 8px;
           }
+          .event-badge.frozen {
+            background: rgba(100, 100, 100, 0.1);
+            color: var(--muted);
+          }
           .empty-state {
             text-align: center;
             padding: 24px;
@@ -404,8 +505,10 @@
             <div class="empty-state">No upcoming events</div>
           ` : `
             <div class="events-strip">
-              ${events.map(event => `
-                <a href="${GATHERLY_BASE_URL}/event/${event.id}?autojoin=true" target="_blank" class="event-card">
+              ${events.map(event => {
+                const frozen = isEventFrozen(event);
+                return `
+                <a href="${GATHERLY_BASE_URL}/event/${event.id}${frozen ? '' : '?autojoin=true'}" target="_blank" class="event-card ${frozen ? 'frozen' : ''}">
                   ${event.image_url ? `
                     <img src="${event.image_url}" alt="${event.title}" class="event-image" />
                   ` : `
@@ -414,10 +517,11 @@
                   <div class="event-content">
                     <div class="event-title">${event.title}</div>
                     <div class="event-date">${formatDate(event.starts_at)}</div>
-                    ${event.category ? `<span class="event-badge">${event.category}</span>` : ''}
+                    ${frozen ? `<span class="event-badge frozen">${lockIcon} Groups Locked</span>` :
+                      event.category ? `<span class="event-badge">${event.category}</span>` : ''}
                   </div>
                 </a>
-              `).join('')}
+              `}).join('')}
             </div>
           `}
         </div>
@@ -436,5 +540,5 @@
     customElements.define('gatherly-events', GatherlyEventsWidget);
   }
 
-  console.log('Gatherly Widgets loaded successfully');
+  console.log('[Gatherly] Widgets loaded successfully');
 })();
