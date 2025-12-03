@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Calendar, MapPin, Users, Clock, Share2, Heart, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Users, Clock, Share2, Heart, CheckCircle, Snowflake } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -12,6 +12,7 @@ import { format, differenceInMinutes } from 'date-fns';
 import { useVibeScore } from '@/hooks/useVibeScore';
 import { VibeScoreBadge } from '@/components/ui/vibe-score-badge';
 import { useEngagement } from '@/hooks/useEngagement';
+import { FreezeStatus, FreezeCountdown, useFreeze } from '@/components/events/FreezeStatus';
 
 interface Event {
   id: string;
@@ -26,6 +27,7 @@ interface Event {
   ends_at: string | null;
   allow_come_alone: boolean;
   max_group_size: number;
+  freeze_hours_before: number | null;
 }
 
 interface Participant {
@@ -55,6 +57,7 @@ export default function EventDetail() {
   
   const { eventVibeScore, loading: vibeLoading } = useVibeScore(id);
   const { checkIn } = useEngagement();
+  const { isFrozen } = useFreeze(event?.starts_at || '', event?.freeze_hours_before || 2);
 
   const autoJoin = searchParams.get('autojoin') === 'true';
 
@@ -64,13 +67,13 @@ export default function EventDetail() {
     }
   }, [id, user]);
 
-  // Handle auto-join from deep link
+  // Handle auto-join from deep link (respect freeze state)
   useEffect(() => {
-    if (autoJoin && !autoJoinAttempted && !loading && event && user && profile?.onboarding_completed && !isJoined) {
+    if (autoJoin && !autoJoinAttempted && !loading && event && user && profile?.onboarding_completed && !isJoined && !isFrozen) {
       setAutoJoinAttempted(true);
       handleJoinAlone();
     }
-  }, [autoJoin, autoJoinAttempted, loading, event, user, profile, isJoined]);
+  }, [autoJoin, autoJoinAttempted, loading, event, user, profile, isJoined, isFrozen]);
 
   const fetchEventDetails = async () => {
     setLoading(true);
@@ -274,7 +277,8 @@ export default function EventDetail() {
 
   const eventDate = new Date(event.starts_at);
   const minutesUntilEvent = differenceInMinutes(eventDate, new Date());
-  const canCheckIn = isJoined && minutesUntilEvent <= 30 && minutesUntilEvent >= -120; // 30 min before to 2 hours after
+  const canCheckIn = isJoined && minutesUntilEvent <= 30 && minutesUntilEvent >= -60; // 30 min before to 1 hour after
+  const canJoin = !isFrozen && !isJoined;
 
   return (
     <div className="min-h-screen bg-background pb-32">
@@ -319,9 +323,15 @@ export default function EventDetail() {
           className="bg-card rounded-2xl p-6 shadow-lg"
         >
           <div className="flex items-center justify-between mb-3">
-            {event.category && (
-              <Badge>{event.category}</Badge>
-            )}
+            <div className="flex items-center gap-2">
+              {event.category && (
+                <Badge>{event.category}</Badge>
+              )}
+              <FreezeStatus 
+                startsAt={event.starts_at} 
+                freezeHoursBefore={event.freeze_hours_before || 2} 
+              />
+            </div>
             {user && eventVibeScore !== null && !vibeLoading && (
               <VibeScoreBadge score={eventVibeScore} size="md" />
             )}
@@ -394,6 +404,16 @@ export default function EventDetail() {
 
       {/* Sticky CTA */}
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background to-transparent">
+        {/* Freeze countdown */}
+        {!isFrozen && !isJoined && (
+          <div className="mb-3 flex justify-center">
+            <FreezeCountdown 
+              startsAt={event.starts_at} 
+              freezeHoursBefore={event.freeze_hours_before || 2} 
+            />
+          </div>
+        )}
+
         {event.allow_come_alone && (
           isJoined ? (
             <div className="flex gap-3">
@@ -415,13 +435,22 @@ export default function EventDetail() {
                   <CheckCircle className="mr-2 h-5 w-5" />
                   Checked In ✓
                 </Button>
-              ) : (
+              ) : !isFrozen ? (
                 <Button
                   variant="outline"
                   className="flex-1 h-14"
                   onClick={handleLeave}
                 >
                   Leave Event
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="flex-1 h-14"
+                  disabled
+                >
+                  <Snowflake className="mr-2 h-4 w-4" />
+                  Groups Locked
                 </Button>
               )}
               <Button
@@ -432,6 +461,15 @@ export default function EventDetail() {
                 View My Group
               </Button>
             </div>
+          ) : isFrozen ? (
+            <Button
+              className="w-full h-14 text-lg font-semibold"
+              disabled
+              variant="secondary"
+            >
+              <Snowflake className="mr-2 h-5 w-5" />
+              Groups Finalized - Join Closed
+            </Button>
           ) : (
             <Button
               className="w-full h-14 text-lg font-semibold"

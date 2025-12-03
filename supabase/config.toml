@@ -65,3 +65,6 @@ verify_jwt = false
 
 [functions.vibe-score]
 verify_jwt = false
+
+[functions.cleanup-stale-groups]
+verify_jwt = false

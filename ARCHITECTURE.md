@@ -4,6 +4,17 @@
 
 Gatherly is a social event platform that enables users to "join alone" and get matched into micro-groups for attending events together. Built on React + Vite + Supabase (Lovable Cloud).
 
+## Consolidation Status (Phase 1-7 Complete)
+
+### Completed Consolidations:
+- **Phase 1**: Database schema normalized with `join_status`, `attendance_status`, unique constraints, freeze triggers
+- **Phase 2**: Shared utilities layer (`_shared/` with responses, permissions, freeze, scoring, moderation, attendance, notifications)
+- **Phase 3**: Edge functions standardized with `{ success, data, error }` responses and error codes (E.FREEZE, E.AUTH, etc.)
+- **Phase 4**: Freeze-aware UI components (FreezeStatus, FreezeCountdown, freeze guards on join)
+- **Phase 5**: Stale group cleanup job (`cleanup-stale-groups` function)
+- **Phase 6**: Attendance QR hardening with checksum, event binding, and expiry
+- **Phase 7**: Moderation with fallback profanity wordlist and muted state UI
+
 ## Core Modules
 
 ### 1. Matching Engine (`supabase/functions/join-event`)
