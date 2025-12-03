@@ -9,7 +9,7 @@ import "./lib/feature-flags"; // Initialize feature flags
 
 // Make test functions available globally
 if (typeof window !== 'undefined') {
-  (window as unknown as Record<string, unknown>).gatherly = {
+  const gatherlyUtils = {
     runAllTests,
     testJoinEventFlow,
     testGroupChatFlow,
@@ -17,7 +17,8 @@ if (typeof window !== 'undefined') {
     testPermissions,
     smokeTests: runProductionSmokeTests,
   };
-  console.info('[Gatherly] Test utilities loaded. Use window.gatherly.smokeTests() for production smoke tests.');
+  (window as unknown as Record<string, unknown>).gatherly = gatherlyUtils;
+  console.info('[Gatherly] Test utilities loaded. Available: runAllTests, smokeTests');
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
