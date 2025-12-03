@@ -23,3 +23,9 @@ verify_jwt = false
 
 [functions.recommended-events]
 verify_jwt = false
+
+[functions.push-subscribe]
+verify_jwt = false
+
+[functions.send-notification]
+verify_jwt = false
