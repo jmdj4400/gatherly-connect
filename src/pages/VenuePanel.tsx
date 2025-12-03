@@ -57,6 +57,17 @@ interface ImportBatch {
   created_at: string;
 }
 
+interface AttendanceRow {
+  event_id: string;
+  event_title: string;
+  date: string;
+  joined: number;
+  attended: number;
+  no_show_rate: number;
+  ticket_price: number;
+  revenue: number;
+}
+
 interface CSVPreviewResult {
   row: number;
   status: 'ok' | 'error' | 'duplicate';
@@ -96,6 +107,7 @@ export default function VenuePanel() {
     totalJoined: number;
     noShowRate: number;
   } | null>(null);
+  const [attendanceData, setAttendanceData] = useState<AttendanceRow[]>([]);
 
   useEffect(() => {
     if (user) {
@@ -193,6 +205,9 @@ export default function VenuePanel() {
           totalJoined: data.summary.total_joined || 0,
           noShowRate: data.summary.overall_no_show_rate || 0
         });
+      }
+      if (data.data) {
+        setAttendanceData(data.data);
       }
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -607,6 +622,54 @@ export default function VenuePanel() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Attendance Table */}
+          {attendanceData.length > 0 && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Attendance Report
+                </CardTitle>
+                <Button variant="outline" size="sm" onClick={handleExportAttendance}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Export CSV
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Event</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Joined</TableHead>
+                        <TableHead>Attended</TableHead>
+                        <TableHead>No-Show Rate</TableHead>
+                        <TableHead>Revenue</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {attendanceData.map((row) => (
+                        <TableRow key={row.event_id}>
+                          <TableCell className="font-medium">{row.event_title}</TableCell>
+                          <TableCell>{format(new Date(row.date), 'MMM d, yyyy')}</TableCell>
+                          <TableCell>{row.joined}</TableCell>
+                          <TableCell>{row.attended}</TableCell>
+                          <TableCell>
+                            <Badge variant={row.no_show_rate > 0.3 ? 'destructive' : 'secondary'}>
+                              {Math.round(row.no_show_rate * 100)}%
+                            </Badge>
+                          </TableCell>
+                          <TableCell>${row.revenue.toFixed(2)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Events Table */}
           <Card>
