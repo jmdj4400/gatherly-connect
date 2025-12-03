@@ -113,22 +113,43 @@ export default function EventDetail() {
     setJoining(true);
 
     try {
-      // Add participant
-      const { error: participantError } = await supabase
-        .from('event_participants')
-        .insert({
-          event_id: id,
-          user_id: user.id,
-          status: 'joined'
-        });
+      // Call the matching edge function
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/join-event`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+          },
+          body: JSON.stringify({ event_id: id })
+        }
+      );
 
-      if (participantError) throw participantError;
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to join event');
+      }
 
       setIsJoined(true);
-      toast({
-        title: "You're in! 🎉",
-        description: "We'll match you with your group soon. Check your groups page!"
-      });
+      
+      if (result.status === 'assigned') {
+        toast({
+          title: "You're matched! 🎉",
+          description: result.message || "Your group is ready. Check your groups page!"
+        });
+      } else if (result.status === 'forming') {
+        toast({
+          title: "Group forming!",
+          description: result.message || "We're building your group. We'll notify you when it's ready!"
+        });
+      } else {
+        toast({
+          title: "You're in! 🎉",
+          description: result.message || "We'll match you with your group soon."
+        });
+      }
 
       // Refresh participants
       await fetchEventDetails();
