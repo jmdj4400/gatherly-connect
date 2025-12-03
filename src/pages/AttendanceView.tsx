@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, QrCode, Check, X, Users, Download } from 'lucide-react';
+import { ArrowLeft, Check, X, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
+import { AttendanceQR } from '@/components/attendance/AttendanceQR';
 
 interface GroupMember {
   id: string;
@@ -44,7 +45,6 @@ export default function AttendanceView() {
   const [group, setGroup] = useState<GroupDetails | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [loading, setLoading] = useState(true);
-  const [qrData, setQrData] = useState<string | null>(null);
   const [isHost, setIsHost] = useState(false);
   const [isOrgAdmin, setIsOrgAdmin] = useState(false);
 
@@ -143,17 +143,6 @@ export default function AttendanceView() {
         setIsOrgAdmin(!!roleData);
       }
 
-      // Fetch QR data
-      const token = await getAccessToken();
-      const qrResponse = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/attendance?action=qr&group_id=${groupId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const qrResult = await qrResponse.json();
-      if (qrResult.qr_data) {
-        setQrData(qrResult.qr_data);
-      }
-
     } catch (error) {
       console.error('Error fetching group:', error);
     } finally {
@@ -231,31 +220,20 @@ export default function AttendanceView() {
       </div>
 
       <div className="p-6 space-y-6">
-        {/* QR Code for check-in */}
-        {qrData && canManageAttendance && (
+        {/* QR Code for check-in - hardened with event binding and expiry */}
+        {canManageAttendance && group.events && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            className="flex justify-center"
           >
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <QrCode className="h-5 w-5" />
-                  Group Check-in QR
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-center">
-                <div className="bg-white p-4 rounded-lg inline-block mb-4">
-                  {/* QR Code would be rendered here with a library */}
-                  <div className="w-48 h-48 bg-muted flex items-center justify-center">
-                    <QrCode className="h-24 w-24 text-muted-foreground" />
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Members can scan this code to check in
-                </p>
-              </CardContent>
-            </Card>
+            <AttendanceQR
+              eventId={group.events.id}
+              eventTitle={group.events.title}
+              startsAt={group.events.starts_at}
+              orgId={group.events.host_org_id || undefined}
+              size={200}
+            />
           </motion.div>
         )}
 
