@@ -6,6 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const ORG_ROLES = ['org_owner', 'org_admin', 'org_helper'];
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -36,9 +38,312 @@ serve(async (req) => {
       });
     }
 
+    // Helper to get user's org role
+    const getUserOrgRole = async (userId: string, orgId: string) => {
+      const { data } = await supabaseAdmin
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .eq('org_id', orgId)
+        .in('role', ORG_ROLES)
+        .maybeSingle();
+      return data?.role || null;
+    };
+
+    // Helper to log activity
+    const logActivity = async (orgId: string, action: string, targetUserId?: string, metadata?: Record<string, unknown>) => {
+      await supabaseAdmin.from('org_activity_log').insert({
+        org_id: orgId,
+        user_id: user.id,
+        action,
+        target_user_id: targetUserId || null,
+        metadata: metadata || null,
+      });
+    };
+
     const url = new URL(req.url);
     const action = url.searchParams.get('action');
 
+    // Handle POST with JSON body for new team management actions
+    if (req.method === 'POST' && !action) {
+      const body = await req.json();
+      const bodyAction = body.action;
+
+      switch (bodyAction) {
+        case 'create_org': {
+          const { name, contact_email } = body;
+          
+          if (!name?.trim()) {
+            return new Response(JSON.stringify({ error: 'Organization name is required' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          const { data: org, error: orgError } = await supabaseAdmin
+            .from('orgs')
+            .insert({ name: name.trim(), contact_email: contact_email?.trim() || user.email })
+            .select()
+            .single();
+
+          if (orgError || !org) {
+            console.error('[org-management] Create org error:', orgError);
+            return new Response(JSON.stringify({ error: 'Failed to create organization' }), {
+              status: 500,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          // Assign org_owner role to creator
+          const { error: roleError } = await supabaseAdmin
+            .from('user_roles')
+            .insert({ user_id: user.id, role: 'org_owner', org_id: org.id });
+
+          if (roleError) {
+            console.error('[org-management] Role assignment error:', roleError);
+            await supabaseAdmin.from('orgs').delete().eq('id', org.id);
+            return new Response(JSON.stringify({ error: 'Failed to assign owner role' }), {
+              status: 500,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          await logActivity(org.id, 'org_created', undefined, { name: name.trim() });
+
+          return new Response(JSON.stringify({ org }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        case 'invite_member': {
+          const { org_id, email, role } = body;
+          
+          const requesterRole = await getUserOrgRole(user.id, org_id);
+          if (!requesterRole || !['org_owner', 'org_admin'].includes(requesterRole)) {
+            return new Response(JSON.stringify({ error: 'Permission denied' }), {
+              status: 403,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          // Only org_owner can add org_admin or org_owner
+          if (['org_owner', 'org_admin'].includes(role) && requesterRole !== 'org_owner') {
+            return new Response(JSON.stringify({ error: 'Only owners can add admins' }), {
+              status: 403,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          // Find user by email
+          const { data: profile } = await supabaseAdmin
+            .from('profiles')
+            .select('id')
+            .eq('email', email)
+            .maybeSingle();
+
+          if (!profile) {
+            return new Response(JSON.stringify({ error: 'User not found' }), {
+              status: 404,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          // Check if already a member
+          const existingRole = await getUserOrgRole(profile.id, org_id);
+          if (existingRole) {
+            return new Response(JSON.stringify({ error: 'User is already a member' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          const { error: insertError } = await supabaseAdmin
+            .from('user_roles')
+            .insert({ user_id: profile.id, org_id, role });
+
+          if (insertError) throw insertError;
+
+          await logActivity(org_id, 'member_added', profile.id, { role, email });
+
+          return new Response(JSON.stringify({ success: true }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        case 'change_role': {
+          const { org_id, target_user_id, new_role } = body;
+          
+          const requesterRole = await getUserOrgRole(user.id, org_id);
+          if (requesterRole !== 'org_owner') {
+            return new Response(JSON.stringify({ error: 'Only owners can change roles' }), {
+              status: 403,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          if (target_user_id === user.id) {
+            return new Response(JSON.stringify({ error: 'Cannot change own role' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          const { error: updateError } = await supabaseAdmin
+            .from('user_roles')
+            .update({ role: new_role })
+            .eq('user_id', target_user_id)
+            .eq('org_id', org_id)
+            .in('role', ORG_ROLES);
+
+          if (updateError) throw updateError;
+
+          await logActivity(org_id, 'role_changed', target_user_id, { new_role });
+
+          return new Response(JSON.stringify({ success: true }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        case 'remove_member': {
+          const { org_id, target_user_id } = body;
+          
+          const requesterRole = await getUserOrgRole(user.id, org_id);
+          if (!requesterRole || !['org_owner', 'org_admin'].includes(requesterRole)) {
+            return new Response(JSON.stringify({ error: 'Permission denied' }), {
+              status: 403,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          if (target_user_id === user.id) {
+            return new Response(JSON.stringify({ error: 'Cannot remove yourself' }), {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          const targetRole = await getUserOrgRole(target_user_id, org_id);
+          if (['org_owner', 'org_admin'].includes(targetRole || '') && requesterRole !== 'org_owner') {
+            return new Response(JSON.stringify({ error: 'Only owners can remove admins' }), {
+              status: 403,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          const { error: deleteError } = await supabaseAdmin
+            .from('user_roles')
+            .delete()
+            .eq('user_id', target_user_id)
+            .eq('org_id', org_id)
+            .in('role', ORG_ROLES);
+
+          if (deleteError) throw deleteError;
+
+          await logActivity(org_id, 'member_removed', target_user_id);
+
+          return new Response(JSON.stringify({ success: true }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        case 'get_members': {
+          const { org_id } = body;
+          
+          const requesterRole = await getUserOrgRole(user.id, org_id);
+          if (!requesterRole) {
+            return new Response(JSON.stringify({ error: 'Not a member' }), {
+              status: 403,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          const { data: members, error } = await supabaseAdmin
+            .from('user_roles')
+            .select(`
+              id,
+              user_id,
+              role,
+              created_at,
+              profiles:user_id (
+                id,
+                display_name,
+                email,
+                avatar_url
+              )
+            `)
+            .eq('org_id', org_id)
+            .in('role', ORG_ROLES);
+
+          if (error) throw error;
+
+          return new Response(JSON.stringify({ members, requester_role: requesterRole }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        case 'get_activity_log': {
+          const { org_id, limit = 50 } = body;
+          
+          const requesterRole = await getUserOrgRole(user.id, org_id);
+          if (!requesterRole) {
+            return new Response(JSON.stringify({ error: 'Not a member' }), {
+              status: 403,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            });
+          }
+
+          const { data: logs, error } = await supabaseAdmin
+            .from('org_activity_log')
+            .select(`
+              id,
+              action,
+              target_user_id,
+              metadata,
+              created_at,
+              profiles:user_id (
+                display_name,
+                email
+              )
+            `)
+            .eq('org_id', org_id)
+            .order('created_at', { ascending: false })
+            .limit(limit);
+
+          if (error) throw error;
+
+          return new Response(JSON.stringify({ logs }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        case 'get_user_orgs': {
+          const { data: orgs, error } = await supabaseAdmin
+            .from('user_roles')
+            .select(`
+              role,
+              org_id,
+              orgs:org_id (
+                id,
+                name,
+                contact_email
+              )
+            `)
+            .eq('user_id', user.id)
+            .in('role', ORG_ROLES);
+
+          if (error) throw error;
+
+          return new Response(JSON.stringify({ orgs }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
+        default:
+          break;
+      }
+    }
+
+    // Legacy query param based actions
     // Create new organization
     if (req.method === 'POST' && action === 'create') {
       const { name, contact_email } = await req.json();
@@ -50,7 +355,6 @@ serve(async (req) => {
         });
       }
 
-      // Create organization
       const { data: org, error: orgError } = await supabaseAdmin
         .from('orgs')
         .insert({
@@ -68,18 +372,12 @@ serve(async (req) => {
         });
       }
 
-      // Assign org_admin role to creator
       const { error: roleError } = await supabaseAdmin
         .from('user_roles')
-        .insert({
-          user_id: user.id,
-          role: 'org_admin',
-          org_id: org.id
-        });
+        .insert({ user_id: user.id, role: 'org_admin', org_id: org.id });
 
       if (roleError) {
         console.error('[org-management] Role assignment error:', roleError);
-        // Rollback org creation
         await supabaseAdmin.from('orgs').delete().eq('id', org.id);
         return new Response(JSON.stringify({ error: 'Failed to assign admin role' }), {
           status: 500,
@@ -98,9 +396,9 @@ serve(async (req) => {
     if (req.method === 'GET' && action === 'list') {
       const { data: roles } = await supabaseAdmin
         .from('user_roles')
-        .select('org_id')
+        .select('org_id, role')
         .eq('user_id', user.id)
-        .eq('role', 'org_admin');
+        .in('role', ORG_ROLES);
 
       if (!roles || roles.length === 0) {
         return new Response(JSON.stringify({ orgs: [] }), {
@@ -133,16 +431,8 @@ serve(async (req) => {
         });
       }
 
-      // Verify access
-      const { data: roleData } = await supabaseAdmin
-        .from('user_roles')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('role', 'org_admin')
-        .eq('org_id', orgId)
-        .maybeSingle();
-
-      if (!roleData) {
+      const requesterRole = await getUserOrgRole(user.id, orgId);
+      if (!requesterRole) {
         return new Response(JSON.stringify({ error: 'Not authorized' }), {
           status: 403,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -151,7 +441,6 @@ serve(async (req) => {
 
       const offset = (page - 1) * limit;
 
-      // Get events with participant count
       const { data: events, count } = await supabaseAdmin
         .from('events')
         .select('*, event_participants(count)', { count: 'exact' })
@@ -183,23 +472,15 @@ serve(async (req) => {
         });
       }
 
-      // Verify access
-      const { data: roleData } = await supabaseAdmin
-        .from('user_roles')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('role', 'org_admin')
-        .eq('org_id', org_id)
-        .maybeSingle();
-
-      if (!roleData) {
+      const requesterRole = await getUserOrgRole(user.id, org_id);
+      if (!requesterRole || !['org_owner', 'org_admin'].includes(requesterRole)) {
         return new Response(JSON.stringify({ error: 'Not authorized' }), {
           status: 403,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      const updates: any = { updated_at: new Date().toISOString() };
+      const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
       if (name?.trim()) updates.name = name.trim();
       if (contact_email?.trim()) updates.contact_email = contact_email.trim();
 
@@ -233,7 +514,6 @@ serve(async (req) => {
         });
       }
 
-      // Get batch and verify access
       const { data: batch } = await supabaseAdmin
         .from('import_batches')
         .select('id, org_id, status')
@@ -254,23 +534,14 @@ serve(async (req) => {
         });
       }
 
-      // Verify access
-      const { data: roleData } = await supabaseAdmin
-        .from('user_roles')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('role', 'org_admin')
-        .eq('org_id', batch.org_id)
-        .maybeSingle();
-
-      if (!roleData) {
+      const requesterRole = await getUserOrgRole(user.id, batch.org_id!);
+      if (!requesterRole || !['org_owner', 'org_admin'].includes(requesterRole)) {
         return new Response(JSON.stringify({ error: 'Not authorized' }), {
           status: 403,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      // Delete events from this batch
       const { error: deleteError } = await supabaseAdmin
         .from('events')
         .delete()
@@ -284,7 +555,6 @@ serve(async (req) => {
         });
       }
 
-      // Update batch status
       await supabaseAdmin
         .from('import_batches')
         .update({ status: 'rolled_back' })
@@ -308,16 +578,8 @@ serve(async (req) => {
         });
       }
 
-      // Verify access
-      const { data: roleData } = await supabaseAdmin
-        .from('user_roles')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('role', 'org_admin')
-        .eq('org_id', orgId)
-        .maybeSingle();
-
-      if (!roleData) {
+      const requesterRole = await getUserOrgRole(user.id, orgId);
+      if (!requesterRole) {
         return new Response(JSON.stringify({ error: 'Not authorized' }), {
           status: 403,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

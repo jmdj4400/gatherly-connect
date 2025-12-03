@@ -1,40 +1,61 @@
 project_id = "yuabwnhulzhnoyvnvqrw"
 
-[functions.join-event]
-verify_jwt = false
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
 
-[functions.csv-import]
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+api_url = "http://localhost"
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+
+[functions.admin-safety]
 verify_jwt = false
 
 [functions.attendance]
 verify_jwt = false
 
-[functions.org-management]
+[functions.csv-import]
 verify_jwt = false
 
-[functions.moderation]
-verify_jwt = false
-
-[functions.admin-safety]
-verify_jwt = false
-
-[functions.vibe-score]
-verify_jwt = false
-
-[functions.recommended-events]
-verify_jwt = false
-
-[functions.push-subscribe]
-verify_jwt = false
-
-[functions.send-notification]
-verify_jwt = false
-
-[functions.get-vapid-key]
+[functions.generate-event-assets]
 verify_jwt = false
 
 [functions.generate-recurring-events]
 verify_jwt = false
 
-[functions.generate-event-assets]
+[functions.get-vapid-key]
+verify_jwt = false
+
+[functions.join-event]
+verify_jwt = false
+
+[functions.moderation]
+verify_jwt = false
+
+[functions.org-management]
+verify_jwt = false
+
+[functions.push-subscribe]
+verify_jwt = false
+
+[functions.recommended-events]
+verify_jwt = false
+
+[functions.send-notification]
+verify_jwt = false
+
+[functions.vibe-score]
 verify_jwt = false
