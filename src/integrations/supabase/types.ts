@@ -64,7 +64,9 @@ export type Database = {
           city: string | null
           created_at: string | null
           description: string | null
+          embedding_updated_at: string | null
           ends_at: string | null
+          event_embedding: Json | null
           host_org_id: string | null
           id: string
           image_url: string | null
@@ -86,7 +88,9 @@ export type Database = {
           city?: string | null
           created_at?: string | null
           description?: string | null
+          embedding_updated_at?: string | null
           ends_at?: string | null
+          event_embedding?: Json | null
           host_org_id?: string | null
           id?: string
           image_url?: string | null
@@ -108,7 +112,9 @@ export type Database = {
           city?: string | null
           created_at?: string | null
           description?: string | null
+          embedding_updated_at?: string | null
           ends_at?: string | null
+          event_embedding?: Json | null
           host_org_id?: string | null
           id?: string
           image_url?: string | null
@@ -369,10 +375,12 @@ export type Database = {
           created_at: string | null
           display_name: string | null
           email: string | null
+          embedding_updated_at: string | null
           id: string
           interests: string[] | null
           language: string | null
           onboarding_completed: boolean | null
+          profile_embedding: Json | null
           radius_km: number | null
           social_energy: number | null
           verified: boolean | null
@@ -383,10 +391,12 @@ export type Database = {
           created_at?: string | null
           display_name?: string | null
           email?: string | null
+          embedding_updated_at?: string | null
           id: string
           interests?: string[] | null
           language?: string | null
           onboarding_completed?: boolean | null
+          profile_embedding?: Json | null
           radius_km?: number | null
           social_energy?: number | null
           verified?: boolean | null
@@ -397,10 +407,12 @@ export type Database = {
           created_at?: string | null
           display_name?: string | null
           email?: string | null
+          embedding_updated_at?: string | null
           id?: string
           interests?: string[] | null
           language?: string | null
           onboarding_completed?: boolean | null
+          profile_embedding?: Json | null
           radius_km?: number | null
           social_energy?: number | null
           verified?: boolean | null
@@ -558,6 +570,41 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      vibe_scores: {
+        Row: {
+          computed_at: string
+          id: string
+          score: number
+          target_id: string
+          target_type: string
+          user_id: string
+        }
+        Insert: {
+          computed_at?: string
+          id?: string
+          score: number
+          target_id: string
+          target_type: string
+          user_id: string
+        }
+        Update: {
+          computed_at?: string
+          id?: string
+          score?: number
+          target_id?: string
+          target_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vibe_scores_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

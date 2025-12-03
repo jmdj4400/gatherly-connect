@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.admin-safety]
 verify_jwt = false
+
+[functions.vibe-score]
+verify_jwt = false
