@@ -1,6 +1,15 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+const ErrorCodes = {
+  PERM: 'E.PERM',
+  FREEZE: 'E.FREEZE',
+  MATCHING: 'E.MATCHING',
+  AUTH: 'E.AUTH',
+  NOT_FOUND: 'E.NOT_FOUND',
+  UNKNOWN: 'E.UNKNOWN',
+} as const;
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -38,7 +47,7 @@ function computeScore(profileA: Profile, profileB: Profile): number {
   const jaccard = jaccardSimilarity(profileA.interests || [], profileB.interests || []);
   const social = socialEnergyScore(profileA.social_energy, profileB.social_energy);
   const proximity = profileA.city?.toLowerCase() === profileB.city?.toLowerCase() ? 1 : 0.5;
-  return 0.6 * jaccard + 0.2 * social + 0.2 * proximity;
+  return 0.5 * jaccard + 0.3 * social + 0.2 * proximity;
 }
 
 function groupScore(members: Profile[]): number {
@@ -54,17 +63,14 @@ function groupScore(members: Profile[]): number {
   return count > 0 ? total / count : 0;
 }
 
-// Optimal group assignment using greedy approach
 function assignGroups(candidates: Candidate[], groupSize: number): Candidate[][] {
   const groups: Candidate[][] = [];
   const remaining = [...candidates];
   
   while (remaining.length >= 2) {
-    // Start new group with random seed for diversity
     const seedIdx = Math.floor(Math.random() * remaining.length);
     const group: Candidate[] = [remaining.splice(seedIdx, 1)[0]];
     
-    // Fill group with best matches
     while (group.length < groupSize && remaining.length > 0) {
       let bestIdx = -1;
       let bestScore = -1;
@@ -88,17 +94,15 @@ function assignGroups(candidates: Candidate[], groupSize: number): Candidate[][]
     if (group.length >= 2) {
       groups.push(group);
     } else {
-      // Put back if can't form valid group
       remaining.push(...group);
       break;
     }
   }
   
-  // Handle remaining users - add to smallest groups
-  while (remaining.length > 0) {
-    const smallestGroup = groups.reduce((min, g) => 
-      g.length < min.length ? g : min, groups[0]);
-    if (smallestGroup && smallestGroup.length < groupSize + 1) {
+  // Handle remaining users
+  while (remaining.length > 0 && groups.length > 0) {
+    const smallestGroup = groups.reduce((min, g) => g.length < min.length ? g : min, groups[0]);
+    if (smallestGroup.length < groupSize + 1) {
       smallestGroup.push(remaining.pop()!);
     } else {
       break;
@@ -106,6 +110,49 @@ function assignGroups(candidates: Candidate[], groupSize: number): Candidate[][]
   }
   
   return groups;
+}
+
+// Permission check
+async function isOrgAdmin(supabase: any, userId: string, orgId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from('user_roles')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('org_id', orgId)
+    .in('role', ['org_owner', 'org_admin'])
+    .maybeSingle();
+  return !!data;
+}
+
+// Freeze check
+async function isEventFrozen(supabase: any, eventId: string): Promise<boolean> {
+  const { data: event } = await supabase
+    .from('events')
+    .select('starts_at, freeze_hours_before')
+    .eq('id', eventId)
+    .single();
+
+  if (!event) return false;
+
+  const eventStart = new Date(event.starts_at);
+  const freezeHours = event.freeze_hours_before ?? 2;
+  const freezeTime = new Date(eventStart.getTime() - freezeHours * 60 * 60 * 1000);
+  return new Date() >= freezeTime;
+}
+
+function successResponse<T>(data: T) {
+  return new Response(JSON.stringify({ success: true, data }), {
+    status: 200,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
+function errorResponse(code: string, message: string, status = 400) {
+  console.error(`[regenerate-groups] ${code}: ${message}`);
+  return new Response(JSON.stringify({ success: false, error: { code, message } }), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
 }
 
 serve(async (req) => {
@@ -117,74 +164,49 @@ serve(async (req) => {
     const { event_id, action } = await req.json();
     
     if (!event_id) {
-      return new Response(JSON.stringify({ error: 'event_id is required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return errorResponse(ErrorCodes.UNKNOWN, 'event_id is required');
     }
 
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Authorization required' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return errorResponse(ErrorCodes.AUTH, 'Authorization required', 401);
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-    
     const supabaseUser = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
       global: { headers: { Authorization: authHeader } }
     });
 
     const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
     if (userError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return errorResponse(ErrorCodes.AUTH, 'Unauthorized', 401);
     }
 
-    // Get event and verify org admin
+    // Get event and verify permissions
     const { data: event } = await supabaseAdmin
       .from('events')
-      .select('id, host_org_id, max_group_size, starts_at, auto_match, freeze_hours_before')
+      .select('id, host_org_id, max_group_size, starts_at, freeze_override_lock')
       .eq('id', event_id)
       .single();
 
     if (!event) {
-      return new Response(JSON.stringify({ error: 'Event not found' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return errorResponse(ErrorCodes.NOT_FOUND, 'Event not found', 404);
     }
 
-    // Check org admin
-    const { data: roleData } = await supabaseAdmin
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .eq('org_id', event.host_org_id)
-      .eq('role', 'org_admin')
-      .maybeSingle();
-
-    if (!roleData) {
-      return new Response(JSON.stringify({ error: 'Not authorized for this event' }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    // Permission check
+    const hasPermission = await isOrgAdmin(supabaseAdmin, user.id, event.host_org_id);
+    if (!hasPermission) {
+      console.log(`[permissions] regenerate_groups denied: user=${user.id}, org=${event.host_org_id}`);
+      return errorResponse(ErrorCodes.PERM, 'Not authorized for this event', 403);
     }
 
-    // Check if event is frozen
-    const eventStart = new Date(event.starts_at);
-    const now = new Date();
-    const hoursUntil = (eventStart.getTime() - now.getTime()) / (1000 * 60 * 60);
-    const isFrozen = hoursUntil <= (event.freeze_hours_before || 2);
+    const isFrozen = await isEventFrozen(supabaseAdmin, event_id);
 
     // Handle freeze action
     if (action === 'freeze') {
+      console.log(`[freeze] Freezing groups for event ${event_id}`);
       const { data: groups } = await supabaseAdmin
         .from('micro_groups')
         .select('id')
@@ -197,44 +219,41 @@ serve(async (req) => {
           .update({ 
             frozen: true, 
             frozen_at: new Date().toISOString(),
-            frozen_by: user.id
+            frozen_by: user.id,
+            status: 'locked'
           })
           .eq('id', group.id);
       }
 
-      return new Response(JSON.stringify({ 
-        success: true, 
-        message: `Frozen ${groups?.length || 0} groups`
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      console.log(`[analytics] groups_frozen: event_id=${event_id}, count=${groups?.length || 0}`);
+      return successResponse({ message: `Frozen ${groups?.length || 0} groups`, count: groups?.length || 0 });
     }
 
     // Handle unfreeze action
     if (action === 'unfreeze') {
+      if (event.freeze_override_lock) {
+        return errorResponse(ErrorCodes.FREEZE, 'Freeze override is locked');
+      }
+
+      console.log(`[freeze] Unfreezing groups for event ${event_id}`);
       await supabaseAdmin
         .from('micro_groups')
-        .update({ frozen: false, frozen_at: null, frozen_by: null })
+        .update({ frozen: false, frozen_at: null, frozen_by: null, status: 'forming' })
         .eq('event_id', event_id);
 
-      return new Response(JSON.stringify({ success: true, message: 'Groups unfrozen' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      console.log(`[analytics] groups_unfrozen: event_id=${event_id}`);
+      return successResponse({ message: 'Groups unfrozen' });
     }
 
-    // Regenerate groups (only if not frozen)
+    // FREEZE GUARD for regeneration
     if (isFrozen && action !== 'force_regenerate') {
-      return new Response(JSON.stringify({ 
-        error: 'Event is frozen. Use force_regenerate to override.' 
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      console.log(`[matching] freeze_block: regenerate blocked for event ${event_id}`);
+      return errorResponse(ErrorCodes.FREEZE, 'Event is frozen. Use force_regenerate to override.');
     }
 
-    console.log(`[regenerate-groups] Regenerating groups for event ${event_id}`);
+    console.log(`[matching] regenerate_started: event_id=${event_id}`);
 
-    // Delete existing non-frozen groups and their members
+    // Delete existing non-frozen groups
     const { data: existingGroups } = await supabaseAdmin
       .from('micro_groups')
       .select('id')
@@ -242,35 +261,24 @@ serve(async (req) => {
       .eq('frozen', false);
 
     for (const group of existingGroups || []) {
-      await supabaseAdmin
-        .from('micro_group_members')
-        .delete()
-        .eq('group_id', group.id);
-      
-      await supabaseAdmin
-        .from('micro_groups')
-        .delete()
-        .eq('id', group.id);
+      await supabaseAdmin.from('micro_group_members').delete().eq('group_id', group.id);
+      await supabaseAdmin.from('micro_groups').delete().eq('id', group.id);
     }
+
+    console.log(`[matching] stale_group_cleaned: count=${existingGroups?.length || 0}`);
 
     // Get all participants
     const { data: participants } = await supabaseAdmin
       .from('event_participants')
       .select('user_id')
       .eq('event_id', event_id)
-      .eq('status', 'joined');
+      .eq('join_status', 'joined');
 
     if (!participants || participants.length < 2) {
-      return new Response(JSON.stringify({ 
-        success: true, 
-        message: 'Not enough participants to form groups',
-        groups_created: 0
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return successResponse({ message: 'Not enough participants to form groups', groups_created: 0 });
     }
 
-    // Get users already in frozen groups
+    // Get users in frozen groups
     const { data: frozenMembers } = await supabaseAdmin
       .from('micro_group_members')
       .select('user_id, micro_groups!inner(event_id, frozen)')
@@ -279,7 +287,7 @@ serve(async (req) => {
 
     const usersInFrozenGroups = new Set((frozenMembers || []).map(m => m.user_id));
 
-    // Build candidates list
+    // Build candidates
     const candidates: Candidate[] = [];
     for (const p of participants) {
       if (usersInFrozenGroups.has(p.user_id)) continue;
@@ -296,21 +304,15 @@ serve(async (req) => {
     }
 
     if (candidates.length < 2) {
-      return new Response(JSON.stringify({ 
-        success: true, 
-        message: 'All participants are in frozen groups',
-        groups_created: 0
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+      return successResponse({ message: 'All participants are in frozen groups', groups_created: 0 });
     }
 
     const groupSize = Math.min(Math.max(event.max_group_size || 3, 2), 5);
     const newGroups = assignGroups(candidates, groupSize);
 
-    console.log(`[regenerate-groups] Creating ${newGroups.length} groups`);
+    console.log(`[matching] grouping_created: count=${newGroups.length}`);
 
-    // Create groups in database
+    // Create groups
     let groupsCreated = 0;
     for (const groupMembers of newGroups) {
       const score = groupScore(groupMembers.map(m => m.profile));
@@ -344,7 +346,6 @@ serve(async (req) => {
 
     // Compute no-show predictions
     for (const candidate of candidates) {
-      // Simple prediction based on past attendance
       const { count: pastEvents } = await supabaseAdmin
         .from('attendance_records')
         .select('id', { count: 'exact', head: true })
@@ -368,19 +369,15 @@ serve(async (req) => {
         }, { onConflict: 'user_id,event_id' });
     }
 
-    return new Response(JSON.stringify({ 
-      success: true, 
+    console.log(`[analytics] groups_regenerated: event_id=${event_id}, groups=${groupsCreated}, participants=${candidates.length}`);
+
+    return successResponse({ 
       groups_created: groupsCreated,
       participants_assigned: candidates.length
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
     console.error('[regenerate-groups] Error:', error);
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return errorResponse(ErrorCodes.UNKNOWN, error instanceof Error ? error.message : 'Unknown error', 500);
   }
 });
