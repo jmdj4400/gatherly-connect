@@ -110,13 +110,44 @@ serve(async (req) => {
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
         if (invoice.subscription) {
-          await supabase
-            .from("subscriptions")
-            .update({ 
-              status: "active",
-              updated_at: new Date().toISOString(),
-            })
-            .eq("stripe_subscription_id", invoice.subscription as string);
+          // Check if this is a venue boost subscription
+          const subscriptionId = invoice.subscription as string;
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+          
+          if (subscription.metadata?.type === "venue_boost") {
+            // Activate venue boost
+            const orgId = subscription.metadata.supabase_org_id;
+            const eventId = subscription.metadata.supabase_event_id;
+            const level = subscription.metadata.boost_level;
+
+            const startsAt = new Date();
+            const endsAt = new Date();
+            endsAt.setMonth(endsAt.getMonth() + 1);
+
+            await supabase
+              .from("venue_boosts")
+              .update({
+                status: "active",
+                starts_at: startsAt.toISOString(),
+                ends_at: endsAt.toISOString(),
+                stripe_subscription_id: subscriptionId,
+                updated_at: new Date().toISOString(),
+              })
+              .eq("org_id", orgId)
+              .eq("event_id", eventId)
+              .eq("status", "pending");
+
+            console.log(`[stripe-webhook] Activated venue boost for event ${eventId}, level: ${level}`);
+          } else {
+            // Regular subscription payment
+            await supabase
+              .from("subscriptions")
+              .update({ 
+                status: "active",
+                updated_at: new Date().toISOString(),
+              })
+              .eq("stripe_subscription_id", subscriptionId);
+          }
         }
         break;
       }

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, Plus, Calendar, Repeat, ChevronRight, 
-  Instagram, Edit2, Trash2, MoreVertical, Users, Code 
+  Instagram, Edit2, Trash2, MoreVertical, Users, Code, Rocket 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GlassCard } from '@/components/ui/glass-card';
@@ -15,6 +15,10 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { CreateEventModal } from '@/components/organizer/CreateEventModal';
 import { ShareAssetsModal } from '@/components/organizer/ShareAssetsModal';
+import { BoostEventModal } from '@/components/organizer/BoostEventModal';
+import { BoostedBadge } from '@/components/events/BoostedBadge';
+import { useVenueBoosts } from '@/hooks/useVenueBoosts';
+import { isFeatureEnabled } from '@/lib/feature-flags';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,8 +47,16 @@ export default function OrganizerEvents() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [isOrgAdmin, setIsOrgAdmin] = useState(false);
+  const [userOrgId, setUserOrgId] = useState<string | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [shareModalEvent, setShareModalEvent] = useState<Event | null>(null);
+  const [boostModalEvent, setBoostModalEvent] = useState<Event | null>(null);
+  const [searchParams] = useSearchParams();
+  
+  const { data: venueBoosts } = useVenueBoosts(userOrgId || undefined);
+  const boostedEventIds = new Set(
+    venueBoosts?.filter(b => b.status === 'active').map(b => b.event_id) || []
+  );
 
   useEffect(() => {
     if (!authLoading && user) {
@@ -58,13 +70,32 @@ export default function OrganizerEvents() {
     
     const { data } = await supabase
       .from('user_roles')
-      .select('role')
+      .select('role, org_id')
       .eq('user_id', user.id)
       .in('role', ['org_owner', 'org_admin', 'org_helper'])
       .maybeSingle();
     
     setIsOrgAdmin(!!data);
+    if (data?.org_id) {
+      setUserOrgId(data.org_id);
+    }
   };
+  
+  // Handle boost success/cancel from URL params
+  useEffect(() => {
+    if (searchParams.get('boost_success') === 'true') {
+      toast({
+        title: 'Boost aktiveret!',
+        description: 'Dit event bliver nu fremhævet i feedet.',
+      });
+    } else if (searchParams.get('boost_canceled') === 'true') {
+      toast({
+        title: 'Boost annulleret',
+        description: 'Du kan altid booke et boost senere.',
+        variant: 'destructive',
+      });
+    }
+  }, [searchParams]);
 
   const fetchEvents = async () => {
     if (!user) return;
@@ -206,6 +237,12 @@ export default function OrganizerEvents() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-semibold">{event.title}</h3>
+                        {boostedEventIds.has(event.id) && (
+                          <BoostedBadge 
+                            level={venueBoosts?.find(b => b.event_id === event.id)?.level as 'basic' | 'pro'} 
+                            size="sm" 
+                          />
+                        )}
                         {event.recurrence_type !== 'none' && (
                           <Badge variant="secondary" className="text-xs">
                             <Repeat className="h-3 w-3 mr-1" />
@@ -243,6 +280,17 @@ export default function OrganizerEvents() {
                     </div>
 
                     <div className="flex items-center gap-2">
+                      {isFeatureEnabled('VENUE_BOOST') && !boostedEventIds.has(event.id) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setBoostModalEvent(event)}
+                          className="text-primary border-primary/30 hover:bg-primary/10"
+                        >
+                          <Rocket className="h-4 w-4 mr-1" />
+                          Boost
+                        </Button>
+                      )}
                       <Button
                         variant="outline"
                         size="sm"
@@ -298,6 +346,15 @@ export default function OrganizerEvents() {
           event={shareModalEvent}
           open={!!shareModalEvent}
           onOpenChange={(open) => !open && setShareModalEvent(null)}
+        />
+      )}
+      
+      {boostModalEvent && userOrgId && (
+        <BoostEventModal
+          event={boostModalEvent}
+          orgId={userOrgId}
+          open={!!boostModalEvent}
+          onOpenChange={(open) => !open && setBoostModalEvent(null)}
         />
       )}
     </div>

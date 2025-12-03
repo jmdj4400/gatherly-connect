@@ -14,7 +14,7 @@ export interface FeatureFlags {
 
 // Default flags (all premium features off by default)
 const DEFAULT_FLAGS: FeatureFlags = {
-  VENUE_BOOST: false,
+  VENUE_BOOST: false, // Enable to show venue boost feature for organizers
   PREMIUM_FEATURES: false, // Enable this to show premium page
   LLM_MATCHING: false,
   POSTHOG_ENABLED: false,
