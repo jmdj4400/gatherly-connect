@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Clock, MapPin, Repeat, Image, X } from 'lucide-react';
+import { Calendar, Clock, MapPin, Repeat, Image, X, Users, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -59,6 +59,10 @@ export function CreateEventModal({ open, onOpenChange, onCreated }: CreateEventM
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrenceType, setRecurrenceType] = useState<'weekly' | 'monthly'>('weekly');
   const [recurrenceDay, setRecurrenceDay] = useState('1');
+  
+  // Auto-matching
+  const [autoMatch, setAutoMatch] = useState(true);
+  const [freezeHours, setFreezeHours] = useState('2');
 
   const resetForm = () => {
     setTitle('');
@@ -73,6 +77,8 @@ export function CreateEventModal({ open, onOpenChange, onCreated }: CreateEventM
     setIsRecurring(false);
     setRecurrenceType('weekly');
     setRecurrenceDay('1');
+    setAutoMatch(true);
+    setFreezeHours('2');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -107,6 +113,8 @@ export function CreateEventModal({ open, onOpenChange, onCreated }: CreateEventM
         recurrence_type: isRecurring ? recurrenceType : 'none',
         recurrence_day: isRecurring && recurrenceType === 'weekly' ? parseInt(recurrenceDay) : null,
         recurrence_time: isRecurring ? time : null,
+        auto_match: autoMatch,
+        freeze_hours_before: parseInt(freezeHours),
       };
 
       const { data, error } = await supabase
@@ -343,6 +351,60 @@ export function CreateEventModal({ open, onOpenChange, onCreated }: CreateEventM
                   <p className="text-xs text-muted-foreground">
                     De næste 6 events vil automatisk blive oprettet
                   </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Auto-matching */}
+          <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-primary" />
+                <Label htmlFor="autoMatch" className="cursor-pointer">
+                  Auto-Matching Mode
+                </Label>
+              </div>
+              <Switch
+                id="autoMatch"
+                checked={autoMatch}
+                onCheckedChange={setAutoMatch}
+              />
+            </div>
+            
+            <p className="text-xs text-muted-foreground">
+              Deltagere matches automatisk i grupper baseret på interesser og social energi
+            </p>
+
+            <AnimatePresence>
+              {autoMatch && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-3"
+                >
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-2">
+                      <Lock className="h-3 w-3" />
+                      Frys grupper før event
+                    </Label>
+                    <Select value={freezeHours} onValueChange={setFreezeHours}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 time før</SelectItem>
+                        <SelectItem value="2">2 timer før</SelectItem>
+                        <SelectItem value="4">4 timer før</SelectItem>
+                        <SelectItem value="12">12 timer før</SelectItem>
+                        <SelectItem value="24">24 timer før</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Grupper låses automatisk så deltagere kan planlægge
+                    </p>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>

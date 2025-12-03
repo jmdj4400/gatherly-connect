@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, Plus, Calendar, Repeat, ChevronRight, 
-  Instagram, Edit2, Trash2, MoreVertical 
+  Instagram, Edit2, Trash2, MoreVertical, Users 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GlassCard } from '@/components/ui/glass-card';
@@ -255,6 +255,10 @@ export default function OrganizerEvents() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => navigate(`/organizer/events/${event.id}/groups`)}>
+                            <Users className="h-4 w-4 mr-2" />
+                            Se grupper
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => navigate(`/event/${event.id}`)}>
                             <ChevronRight className="h-4 w-4 mr-2" />
                             Se event
