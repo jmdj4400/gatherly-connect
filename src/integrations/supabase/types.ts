@@ -727,6 +727,7 @@ export type Database = {
           interests: string[] | null
           language: string | null
           onboarding_completed: boolean | null
+          price_group: string | null
           profile_embedding: Json | null
           radius_km: number | null
           social_energy: number | null
@@ -743,6 +744,7 @@ export type Database = {
           interests?: string[] | null
           language?: string | null
           onboarding_completed?: boolean | null
+          price_group?: string | null
           profile_embedding?: Json | null
           radius_km?: number | null
           social_energy?: number | null
@@ -759,6 +761,7 @@ export type Database = {
           interests?: string[] | null
           language?: string | null
           onboarding_completed?: boolean | null
+          price_group?: string | null
           profile_embedding?: Json | null
           radius_km?: number | null
           social_energy?: number | null
@@ -852,6 +855,59 @@ export type Database = {
             columns: ["message_id"]
             isOneToOne: false
             referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          canceled_at: string | null
+          created_at: string
+          id: string
+          plan: string
+          price_group: string | null
+          started_at: string | null
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          trial_ends_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          canceled_at?: string | null
+          created_at?: string
+          id?: string
+          plan: string
+          price_group?: string | null
+          started_at?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          canceled_at?: string | null
+          created_at?: string
+          id?: string
+          plan?: string
+          price_group?: string | null
+          started_at?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          trial_ends_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
