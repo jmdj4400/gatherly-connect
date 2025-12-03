@@ -1090,6 +1090,66 @@ export type Database = {
           },
         ]
       }
+      venue_boosts: {
+        Row: {
+          created_at: string
+          ends_at: string | null
+          event_id: string
+          id: string
+          level: string
+          org_id: string
+          price_amount: number
+          starts_at: string | null
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at?: string | null
+          event_id: string
+          id?: string
+          level?: string
+          org_id: string
+          price_amount: number
+          starts_at?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string | null
+          event_id?: string
+          id?: string
+          level?: string
+          org_id?: string
+          price_amount?: number
+          starts_at?: string | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_boosts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venue_boosts_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vibe_scores: {
         Row: {
           computed_at: string

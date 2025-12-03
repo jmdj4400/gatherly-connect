@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Calendar, MapPin, Users, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { GlassCard } from '@/components/ui/glass-card';
+import { BoostedBadge } from '@/components/events/BoostedBadge';
 import { format, isToday, isTomorrow } from 'date-fns';
 
 interface EventCardProps {
@@ -19,9 +20,11 @@ interface EventCardProps {
   };
   participantCount?: number;
   variant?: 'default' | 'compact';
+  isBoosted?: boolean;
+  boostLevel?: 'basic' | 'pro';
 }
 
-export function EventCard({ event, participantCount = 0, variant = 'default' }: EventCardProps) {
+export function EventCard({ event, participantCount = 0, variant = 'default', isBoosted, boostLevel }: EventCardProps) {
   const eventDate = new Date(event.starts_at);
   
   const getDateLabel = () => {
@@ -91,11 +94,16 @@ export function EventCard({ event, participantCount = 0, variant = 'default' }: 
           
           {/* Badges */}
           <div className="absolute top-3 left-3 right-3 flex justify-between">
-            {event.category && (
-              <Badge variant="secondary" className="backdrop-blur-sm bg-card/80 text-xs font-medium">
-                {event.category}
-              </Badge>
-            )}
+            <div className="flex gap-2">
+              {event.category && (
+                <Badge variant="secondary" className="backdrop-blur-sm bg-card/80 text-xs font-medium">
+                  {event.category}
+                </Badge>
+              )}
+              {isBoosted && (
+                <BoostedBadge level={boostLevel} size="sm" />
+              )}
+            </div>
             {event.allow_come_alone && (
               <Badge className="bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/25 text-xs">
                 ✨ Join Alone

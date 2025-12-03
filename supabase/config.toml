@@ -1,5 +1,8 @@
 project_id = "yuabwnhulzhnoyvnvqrw"
 
+[functions.create-boost-checkout]
+verify_jwt = false
+
 [functions.health]
 verify_jwt = false
 
