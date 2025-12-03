@@ -398,6 +398,44 @@ export type Database = {
           },
         ]
       }
+      org_activity_log: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          org_id: string
+          target_user_id: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          org_id: string
+          target_user_id?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          org_id?: string
+          target_user_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_activity_log_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orgs: {
         Row: {
           contact_email: string | null
@@ -698,6 +736,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_org_role: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
       has_role: {
         Args: {
           _org_id?: string
@@ -706,9 +748,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_org_member: {
+        Args: { _org_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      app_role: "admin" | "org_admin" | "user"
+      app_role: "admin" | "org_admin" | "user" | "org_owner" | "org_helper"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -836,7 +882,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "org_admin", "user"],
+      app_role: ["admin", "org_admin", "user", "org_owner", "org_helper"],
     },
   },
 } as const
