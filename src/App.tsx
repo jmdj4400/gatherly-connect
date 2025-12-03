@@ -23,6 +23,7 @@ import OrganizerEvents from "./pages/OrganizerEvents";
 import OrganizerTeam from "./pages/OrganizerTeam";
 import OrganizerSettings from "./pages/OrganizerSettings";
 import CommunityLanding from "./pages/CommunityLanding";
+import CommunityFeed from "./pages/CommunityFeed";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -82,6 +83,7 @@ const App = () => {
                 <Route path="/organizer/team" element={<OrganizerTeam />} />
                 <Route path="/organizer/settings" element={<OrganizerSettings />} />
                 <Route path="/c/:handle" element={<CommunityLanding />} />
+                <Route path="/c/:handle/feed" element={<CommunityFeed />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

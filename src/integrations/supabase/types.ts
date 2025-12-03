@@ -14,6 +14,139 @@ export type Database = {
   }
   public: {
     Tables: {
+      attendance_records: {
+        Row: {
+          checked_in_at: string
+          created_at: string
+          event_id: string
+          id: string
+          minutes_before_start: number | null
+          org_id: string | null
+          user_id: string
+        }
+        Insert: {
+          checked_in_at?: string
+          created_at?: string
+          event_id: string
+          id?: string
+          minutes_before_start?: number | null
+          org_id?: string | null
+          user_id: string
+        }
+        Update: {
+          checked_in_at?: string
+          created_at?: string
+          event_id?: string
+          id?: string
+          minutes_before_start?: number | null
+          org_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_records_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_records_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      badge_definitions: {
+        Row: {
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          name: string
+          requirement_count: number
+          requirement_type: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          icon: string
+          id?: string
+          name: string
+          requirement_count: number
+          requirement_type: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          name?: string
+          requirement_count?: number
+          requirement_type?: string
+          slug?: string
+        }
+        Relationships: []
+      }
+      community_feed: {
+        Row: {
+          badge_id: string | null
+          created_at: string
+          event_id: string | null
+          feed_type: string
+          id: string
+          metadata: Json | null
+          org_id: string
+          user_id: string | null
+        }
+        Insert: {
+          badge_id?: string | null
+          created_at?: string
+          event_id?: string | null
+          feed_type: string
+          id?: string
+          metadata?: Json | null
+          org_id: string
+          user_id?: string | null
+        }
+        Update: {
+          badge_id?: string | null
+          created_at?: string
+          event_id?: string | null
+          feed_type?: string
+          id?: string
+          metadata?: Json | null
+          org_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_feed_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badge_definitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_feed_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_feed_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_followers: {
         Row: {
           created_at: string
@@ -651,6 +784,45 @@ export type Database = {
           },
         ]
       }
+      user_badges: {
+        Row: {
+          awarded_at: string
+          badge_id: string
+          id: string
+          org_id: string | null
+          user_id: string
+        }
+        Insert: {
+          awarded_at?: string
+          badge_id: string
+          id?: string
+          org_id?: string | null
+          user_id: string
+        }
+        Update: {
+          awarded_at?: string
+          badge_id?: string
+          id?: string
+          org_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badge_definitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_badges_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_bans: {
         Row: {
           banned_by: string | null
@@ -742,6 +914,50 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_streaks: {
+        Row: {
+          category: string | null
+          current_streak: number
+          id: string
+          last_attendance_week: number | null
+          last_attendance_year: number | null
+          longest_streak: number
+          org_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          current_streak?: number
+          id?: string
+          last_attendance_week?: number | null
+          last_attendance_year?: number | null
+          longest_streak?: number
+          org_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          current_streak?: number
+          id?: string
+          last_attendance_week?: number | null
+          last_attendance_year?: number | null
+          longest_streak?: number
+          org_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_streaks_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       vibe_scores: {
         Row: {
