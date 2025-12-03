@@ -48,23 +48,49 @@ const getVapidPublicKey = async (): Promise<string | null> => {
 
 // Subscribe to push notifications
 export const subscribeToPush = async (userId: string): Promise<boolean> => {
-  if (!isNotificationSupported()) return false;
+  if (!isNotificationSupported()) {
+    console.log('[notifications] Push not supported');
+    return false;
+  }
   
   try {
+    console.log('[notifications] Checking service worker...');
+    
+    // Check if service worker is registered
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    console.log('[notifications] Service worker registrations:', registrations.length);
+    
+    if (registrations.length === 0) {
+      console.log('[notifications] No service worker registered, attempting registration...');
+      // Try to register the service worker
+      try {
+        await navigator.serviceWorker.register('/sw.js');
+        console.log('[notifications] Service worker registered');
+      } catch (swError) {
+        console.error('[notifications] Service worker registration failed:', swError);
+        return false;
+      }
+    }
+    
     const registration = await navigator.serviceWorker.ready;
+    console.log('[notifications] Service worker ready');
     
     // Get VAPID public key from backend
     const vapidPublicKey = await getVapidPublicKey();
     
     if (!vapidPublicKey) {
-      console.error('VAPID public key not available');
+      console.error('[notifications] VAPID public key not available');
       return false;
     }
+    
+    console.log('[notifications] VAPID key obtained, subscribing to push...');
     
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as BufferSource,
     });
+
+    console.log('[notifications] Push subscription created, saving to backend...');
 
     // Send subscription to backend
     const { error } = await supabase.functions.invoke('push-subscribe', {
@@ -75,13 +101,14 @@ export const subscribeToPush = async (userId: string): Promise<boolean> => {
     });
 
     if (error) {
-      console.error('Error saving push subscription:', error);
+      console.error('[notifications] Error saving push subscription:', error);
       return false;
     }
 
+    console.log('[notifications] Push subscription saved successfully');
     return true;
   } catch (error) {
-    console.error('Error subscribing to push:', error);
+    console.error('[notifications] Error subscribing to push:', error);
     return false;
   }
 };
