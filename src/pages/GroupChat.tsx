@@ -12,6 +12,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useRealtimeChat, Message, TypingUser } from '@/hooks/useRealtimeChat';
 import { useCompatibilityMatrix } from '@/hooks/useVibeScore';
 import { BestMatchTag, VibeScoreBadge } from '@/components/ui/vibe-score-badge';
+import { useKeyboardAware } from '@/hooks/useKeyboardAware';
+import { hapticFeedback } from '@/lib/capacitor';
 import { format, formatDistanceToNow } from 'date-fns';
 
 interface GroupInfo {
@@ -41,6 +43,7 @@ export default function GroupChat() {
   const [eventId, setEventId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { keyboardHeight, isKeyboardVisible, scrollToInput } = useKeyboardAware();
 
   const { bestMatch } = useCompatibilityMatrix(eventId || undefined);
 
@@ -145,6 +148,7 @@ export default function GroupChat() {
     e.preventDefault();
     if (!newMessage.trim() || !user || sending) return;
 
+    await hapticFeedback.medium();
     setSending(true);
     const messageContent = newMessage.trim();
     setNewMessage('');
@@ -153,6 +157,7 @@ export default function GroupChat() {
     
     if (!result.success) {
       setNewMessage(messageContent);
+      await hapticFeedback.heavy();
       toast({
         title: 'Message not sent',
         description: result.error,
@@ -162,6 +167,10 @@ export default function GroupChat() {
     
     setSending(false);
     inputRef.current?.focus();
+  };
+
+  const handleInputFocus = () => {
+    scrollToInput(inputRef.current);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -352,7 +361,10 @@ export default function GroupChat() {
       </div>
 
       {/* Input */}
-      <div className="sticky bottom-0 bg-background border-t p-4">
+      <div 
+        className="sticky bottom-0 bg-background border-t p-4 transition-all duration-200"
+        style={{ paddingBottom: isKeyboardVisible ? `${keyboardHeight + 16}px` : undefined }}
+      >
         {/* Muted Banner */}
         {isMuted && muteExpiresAt && (
           <div className="flex items-center justify-center gap-2 text-amber-600 bg-amber-50 dark:bg-amber-900/20 rounded-lg py-2 px-4 mb-3">
@@ -375,6 +387,7 @@ export default function GroupChat() {
               placeholder={isMuted ? "You are muted..." : "Type a message..."}
               value={newMessage}
               onChange={handleInputChange}
+              onFocus={handleInputFocus}
               className="flex-1 h-12"
               disabled={sending || isMuted}
             />

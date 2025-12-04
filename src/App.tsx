@@ -10,7 +10,11 @@ import { OfflineBanner } from "@/components/pwa/OfflineBanner";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { CookieConsent } from "@/components/cookie/CookieConsent";
 import { DeepLinkHandler } from "@/components/native/DeepLinkHandler";
+import { NativeErrorBoundary } from "@/components/native/NativeErrorBoundary";
 import { PageLoader } from "@/components/ui/loading-spinner";
+import { isNative, initializeCapacitor } from "@/lib/capacitor";
+import { useNativeBackButton } from "@/hooks/useNativeBackButton";
+import { useAppLifecycle } from "@/hooks/useAppLifecycle";
 
 // Eagerly load critical pages
 import Index from "./pages/Index";
@@ -41,11 +45,25 @@ const Cookies = lazy(() => import("./pages/Cookies"));
 
 const queryClient = new QueryClient();
 
+// Initialize Capacitor on app start
+initializeCapacitor();
+
+// Native hooks wrapper component (must be inside BrowserRouter)
+function NativeHooks() {
+  useNativeBackButton();
+  useAppLifecycle();
+  return null;
+}
+
 const App = () => {
   const [showInstallPrompt, setShowInstallPrompt] = useState(false);
   const [installPromptDismissed, setInstallPromptDismissed] = useState(false);
+  const native = isNative();
 
   useEffect(() => {
+    // Don't show install prompt on native apps
+    if (native) return;
+    
     // Show install prompt after 30 seconds if not dismissed
     const dismissed = localStorage.getItem('pwa-install-dismissed');
     if (dismissed) {
@@ -58,7 +76,7 @@ const App = () => {
     }, 30000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [native]);
 
   const handleDismissInstall = () => {
     setShowInstallPrompt(false);
@@ -69,17 +87,19 @@ const App = () => {
   return (
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <AuthProvider>
-            <Toaster />
-            <Sonner />
-            <OfflineBanner />
-            {showInstallPrompt && !installPromptDismissed && (
-              <InstallPrompt onDismiss={handleDismissInstall} />
-            )}
-            <BrowserRouter>
-              <DeepLinkHandler />
-              <CookieConsent />
+        <NativeErrorBoundary>
+          <TooltipProvider>
+            <AuthProvider>
+              <Toaster />
+              <Sonner />
+              <OfflineBanner />
+              {!native && showInstallPrompt && !installPromptDismissed && (
+                <InstallPrompt onDismiss={handleDismissInstall} />
+              )}
+              <BrowserRouter>
+                <NativeHooks />
+                <DeepLinkHandler />
+                {!native && <CookieConsent />}
               <Suspense fallback={<PageLoader message="Loading..." />}>
                 <Routes>
                   <Route path="/" element={<Index />} />
@@ -112,6 +132,7 @@ const App = () => {
             </BrowserRouter>
           </AuthProvider>
         </TooltipProvider>
+        </NativeErrorBoundary>
       </QueryClientProvider>
     </HelmetProvider>
   );
