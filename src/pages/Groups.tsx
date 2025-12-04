@@ -10,6 +10,7 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { ShareMomentModal } from '@/components/share/ShareMomentModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
+import { useTranslation } from '@/lib/i18n';
 import { format } from 'date-fns';
 
 interface GroupWithDetails {
@@ -34,6 +35,7 @@ interface GroupWithDetails {
 export default function Groups() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [groups, setGroups] = useState<GroupWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [shareModalOpen, setShareModalOpen] = useState(false);
@@ -48,7 +50,6 @@ export default function Groups() {
   }, [user]);
 
   const fetchGroups = async () => {
-    // Get groups the user is a member of
     const { data: membershipData } = await supabase
       .from('micro_group_members')
       .select(`
@@ -69,21 +70,18 @@ export default function Groups() {
       return;
     }
 
-    // Get full group details
     const groupsWithDetails: GroupWithDetails[] = [];
 
     for (const membership of membershipData) {
       const group = membership.micro_groups as any;
       if (!group) continue;
 
-      // Get event details
       const { data: eventData } = await supabase
         .from('events')
         .select('id, title, starts_at, venue_name, image_url')
         .eq('id', group.event_id)
         .single();
 
-      // Get group members
       const { data: membersData } = await supabase
         .from('micro_group_members')
         .select(`
@@ -124,20 +122,31 @@ export default function Groups() {
     }
   };
 
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'forming':
+        return t('groups.status.forming');
+      case 'locked':
+        return t('groups.status.ready');
+      default:
+        return status;
+    }
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen bg-background pb-20">
         <div className="flex flex-col items-center justify-center h-[60vh] p-6 text-center">
           <Users className="h-16 w-16 text-muted-foreground mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Sign in to see your groups</h2>
+          <h2 className="text-xl font-semibold mb-2">{t('groups.sign_in')}</h2>
           <p className="text-muted-foreground mb-4">
-            Join events and get matched with others
+            {t('groups.sign_in_desc')}
           </p>
           <Link
             to="/auth"
             className="inline-flex items-center justify-center h-12 px-6 bg-primary text-primary-foreground rounded-lg font-semibold"
           >
-            Sign In
+            {t('profile.sign_in')}
           </Link>
         </div>
         <BottomNav />
@@ -149,8 +158,8 @@ export default function Groups() {
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b p-4">
-        <h1 className="text-2xl font-bold">My Groups</h1>
-        <p className="text-sm text-muted-foreground">Your event micro-groups</p>
+        <h1 className="text-2xl font-bold">{t('groups.title')}</h1>
+        <p className="text-sm text-muted-foreground">{t('groups.subtitle')}</p>
       </header>
 
       {/* Content */}
@@ -168,15 +177,15 @@ export default function Groups() {
             className="text-center py-12"
           >
             <Users className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No groups yet</h3>
+            <h3 className="text-lg font-semibold mb-2">{t('groups.no_groups')}</h3>
             <p className="text-muted-foreground mb-4">
-              Join an event to get matched with others
+              {t('groups.no_groups_desc')}
             </p>
             <Link
               to="/explore"
               className="inline-flex items-center justify-center h-12 px-6 bg-primary text-primary-foreground rounded-lg font-semibold"
             >
-              Explore Events
+              {t('groups.explore_events')}
             </Link>
           </motion.div>
         ) : (
@@ -196,9 +205,7 @@ export default function Groups() {
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <Badge className={getStatusColor(group.status)}>
-                          {group.status === 'forming' ? 'Forming...' : 
-                           group.status === 'locked' ? 'Ready!' : 
-                           group.status}
+                          {getStatusLabel(group.status)}
                         </Badge>
                         <h3 className="font-semibold mt-2 line-clamp-1">{group.event.title}</h3>
                       </div>
@@ -233,7 +240,6 @@ export default function Groups() {
                       </div>
                       
                       <div className="flex items-center gap-2">
-                        {/* Show Share button for past events */}
                         {new Date(group.event.starts_at) < new Date() && (
                           <Button
                             variant="outline"
@@ -245,12 +251,12 @@ export default function Groups() {
                             }}
                           >
                             <Share2 className="h-4 w-4 mr-1" />
-                            Share
+                            {t('groups.share')}
                           </Button>
                         )}
                         <div className="flex items-center gap-1 text-primary">
                           <MessageCircle className="h-4 w-4" />
-                          <span className="text-sm font-medium">Chat</span>
+                          <span className="text-sm font-medium">{t('groups.chat')}</span>
                         </div>
                       </div>
                     </div>
@@ -262,7 +268,6 @@ export default function Groups() {
         )}
       </main>
 
-      {/* Share Moment Modal */}
       {selectedGroup && (
         <ShareMomentModal
           open={shareModalOpen}
