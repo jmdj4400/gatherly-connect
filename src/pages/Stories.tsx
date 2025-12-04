@@ -3,40 +3,68 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Quote, TrendingUp, Users, Calendar } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-
-const stories = [
-  {
-    venue: 'Løbeklubben CPH',
-    type: 'Løbeklub',
-    quote: 'Vi har fået 40% flere deltagere til vores ugentlige løb siden vi startede med Gatherly. Det bedste er, at folk faktisk møder op, fordi de allerede har en gruppe at løbe med.',
-    author: 'Marie Jensen',
-    role: 'Stifter',
-    stats: { members: '320+', events: '48', attendance: '92%' },
-  },
-  {
-    venue: 'Vinbaren Nørrebro',
-    type: 'Vinbar',
-    quote: 'Vores wine-tastings var svære at fylde op. Nu har vi venteliste til hver eneste event. Gatherly-gæsterne er engagerede og bliver ofte til stamgæster.',
-    author: 'Thomas Andersen',
-    role: 'Ejer',
-    stats: { members: '180+', events: '24', attendance: '88%' },
-  },
-  {
-    venue: 'Studenterhuset Aarhus',
-    type: 'Studenterforening',
-    quote: 'Nye studerende har svært ved at møde folk. Med Gatherly kan de tilmelde sig alene og blive matchet med andre nye studerende. Det har transformeret vores intro-uger.',
-    author: 'Sofie Madsen',
-    role: 'Foreningsformand',
-    stats: { members: '850+', events: '120', attendance: '85%' },
-  },
-];
+import { useTranslation } from '@/lib/i18n';
 
 export default function Stories() {
+  const { t, language } = useTranslation();
+
+  const stories = language === 'da' ? [
+    {
+      venue: 'Løbeklubben CPH',
+      type: 'Løbeklub',
+      quote: 'Vi har fået 40% flere deltagere til vores ugentlige løb siden vi startede med Gatherly. Det bedste er, at folk faktisk møder op, fordi de allerede har en gruppe at løbe med.',
+      author: 'Marie Jensen',
+      role: 'Stifter',
+      stats: { members: '320+', events: '48', attendance: '92%' },
+    },
+    {
+      venue: 'Vinbaren Nørrebro',
+      type: 'Vinbar',
+      quote: 'Vores wine-tastings var svære at fylde op. Nu har vi venteliste til hver eneste event. Gatherly-gæsterne er engagerede og bliver ofte til stamgæster.',
+      author: 'Thomas Andersen',
+      role: 'Ejer',
+      stats: { members: '180+', events: '24', attendance: '88%' },
+    },
+    {
+      venue: 'Studenterhuset Aarhus',
+      type: 'Studenterforening',
+      quote: 'Nye studerende har svært ved at møde folk. Med Gatherly kan de tilmelde sig alene og blive matchet med andre nye studerende. Det har transformeret vores intro-uger.',
+      author: 'Sofie Madsen',
+      role: 'Foreningsformand',
+      stats: { members: '850+', events: '120', attendance: '85%' },
+    },
+  ] : [
+    {
+      venue: 'Running Club CPH',
+      type: 'Running Club',
+      quote: "We've seen 40% more participants at our weekly runs since starting with Gatherly. The best part is people actually show up because they already have a group to run with.",
+      author: 'Marie Jensen',
+      role: 'Founder',
+      stats: { members: '320+', events: '48', attendance: '92%' },
+    },
+    {
+      venue: 'Wine Bar Nørrebro',
+      type: 'Wine Bar',
+      quote: 'Our wine tastings were hard to fill. Now we have a waitlist for every event. Gatherly guests are engaged and often become regulars.',
+      author: 'Thomas Andersen',
+      role: 'Owner',
+      stats: { members: '180+', events: '24', attendance: '88%' },
+    },
+    {
+      venue: 'Student House Aarhus',
+      type: 'Student Association',
+      quote: "New students struggle to meet people. With Gatherly, they can sign up alone and get matched with other new students. It's transformed our intro weeks.",
+      author: 'Sofie Madsen',
+      role: 'Association Chair',
+      stats: { members: '850+', events: '120', attendance: '85%' },
+    },
+  ];
+
   return (
     <>
       <Helmet>
-        <title>Succeshistorier | Gatherly</title>
-        <meta name="description" content="Se hvordan venues og arrangører bruger Gatherly til at skabe bedre events og øge deltagelsen." />
+        <title>{t('stories.title')} | Gatherly</title>
+        <meta name="description" content={t('stories.meta')} />
       </Helmet>
       
       <main className="min-h-screen bg-background">
@@ -44,14 +72,14 @@ export default function Stories() {
           <Link to="/">
             <Button variant="ghost" size="sm" className="mb-8">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Tilbage
+              {t('nav.back')}
             </Button>
           </Link>
 
           <div className="text-center mb-16">
-            <h1 className="text-4xl font-bold mb-4">Succeshistorier</h1>
+            <h1 className="text-4xl font-bold mb-4">{t('stories.title')}</h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Se hvordan venues og communities bruger Gatherly til at skabe bedre oplevelser.
+              {t('stories.subtitle')}
             </p>
           </div>
 
@@ -77,17 +105,17 @@ export default function Stories() {
                         <div className="text-center">
                           <Users className="h-6 w-6 mx-auto text-primary mb-2" />
                           <div className="text-2xl font-bold">{story.stats.members}</div>
-                          <div className="text-xs text-muted-foreground">Medlemmer</div>
+                          <div className="text-xs text-muted-foreground">{t('stories.stats.members')}</div>
                         </div>
                         <div className="text-center">
                           <Calendar className="h-6 w-6 mx-auto text-primary mb-2" />
                           <div className="text-2xl font-bold">{story.stats.events}</div>
-                          <div className="text-xs text-muted-foreground">Events</div>
+                          <div className="text-xs text-muted-foreground">{t('stories.stats.events')}</div>
                         </div>
                         <div className="text-center">
                           <TrendingUp className="h-6 w-6 mx-auto text-primary mb-2" />
                           <div className="text-2xl font-bold">{story.stats.attendance}</div>
-                          <div className="text-xs text-muted-foreground">Fremmøde</div>
+                          <div className="text-xs text-muted-foreground">{t('stories.stats.attendance')}</div>
                         </div>
                       </div>
                     </div>
@@ -98,12 +126,12 @@ export default function Stories() {
           </div>
 
           <section className="text-center py-12 px-6 rounded-xl bg-muted/50">
-            <h2 className="text-2xl font-semibold mb-4">Vil du være den næste succeshistorie?</h2>
+            <h2 className="text-2xl font-semibold mb-4">{t('stories.cta.title')}</h2>
             <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-              Bliv partner med Gatherly og se, hvordan vi kan hjælpe dig med at skabe bedre events.
+              {t('stories.cta.text')}
             </p>
             <Button size="lg" asChild>
-              <Link to="/partners">Bliv partner</Link>
+              <Link to="/partners">{t('stories.cta.button')}</Link>
             </Button>
           </section>
         </div>

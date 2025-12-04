@@ -3,6 +3,7 @@ import { ArrowRight, Play, Users, Calendar, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { GlassCard } from '@/components/ui/glass-card';
+import { useTranslation } from '@/lib/i18n';
 
 interface HeroSectionProps {
   onGetStarted: () => void;
@@ -10,6 +11,8 @@ interface HeroSectionProps {
 }
 
 export function HeroSection({ onGetStarted, onHowItWorks }: HeroSectionProps) {
+  const { t, language } = useTranslation();
+
   return (
     <section className="relative min-h-[90vh] flex items-center overflow-hidden">
       {/* Gradient Background */}
@@ -27,7 +30,7 @@ export function HeroSection({ onGetStarted, onHowItWorks }: HeroSectionProps) {
               transition={{ duration: 0.5 }}
             >
               <Badge variant="soft" className="mb-6 px-4 py-2 text-sm font-medium">
-                ✨ The first platform designed for people who show up alone
+                ✨ {language === 'da' ? 'Den første platform designet til folk der møder op alene' : 'The first platform designed for people who show up alone'}
               </Badge>
             </motion.div>
 
@@ -37,9 +40,19 @@ export function HeroSection({ onGetStarted, onHowItWorks }: HeroSectionProps) {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6"
             >
-              Meet people through{' '}
-              <span className="gradient-brand-text">real events</span>.{' '}
-              <span className="text-muted-foreground">Not apps.</span>
+              {language === 'da' ? (
+                <>
+                  Mød mennesker gennem{' '}
+                  <span className="gradient-brand-text">ægte events</span>.{' '}
+                  <span className="text-muted-foreground">Ikke apps.</span>
+                </>
+              ) : (
+                <>
+                  Meet people through{' '}
+                  <span className="gradient-brand-text">real events</span>.{' '}
+                  <span className="text-muted-foreground">Not apps.</span>
+                </>
+              )}
             </motion.h1>
 
             <motion.p
@@ -48,8 +61,10 @@ export function HeroSection({ onGetStarted, onHowItWorks }: HeroSectionProps) {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-lg sm:text-xl text-muted-foreground mb-8 leading-relaxed"
             >
-              Join local events → Get matched in a small group → Show up together.
-              Gatherly makes socializing feel natural again.
+              {language === 'da' 
+                ? 'Tilmeld dig et event → Bliv matchet i en lille gruppe → Mød op sammen. Gatherly gør det naturligt at være social igen.'
+                : 'Join local events → Get matched in a small group → Show up together. Gatherly makes socializing feel natural again.'
+              }
             </motion.p>
 
             <motion.div
@@ -59,12 +74,12 @@ export function HeroSection({ onGetStarted, onHowItWorks }: HeroSectionProps) {
               className="flex flex-col sm:flex-row gap-4"
             >
               <Button size="xl" variant="gradient" onClick={onGetStarted} className="group">
-                Get Early Access
+                {t('landing.hero.cta')}
                 <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
               </Button>
               <Button size="xl" variant="outline" onClick={onHowItWorks} className="group">
                 <Play className="mr-2 h-4 w-4" />
-                See How It Works
+                {t('landing.hero.secondary_cta')}
               </Button>
             </motion.div>
           </div>
@@ -94,15 +109,15 @@ export function HeroSection({ onGetStarted, onHowItWorks }: HeroSectionProps) {
                           <Calendar className="h-6 w-6 text-primary" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-semibold text-sm">Friday Night Jazz</p>
-                          <p className="text-xs text-muted-foreground">Tonight at 8PM</p>
+                          <p className="font-semibold text-sm">{language === 'da' ? 'Fredag Aften Jazz' : 'Friday Night Jazz'}</p>
+                          <p className="text-xs text-muted-foreground">{language === 'da' ? 'I aften kl. 20' : 'Tonight at 8PM'}</p>
                           <div className="flex items-center gap-1 mt-1">
                             <div className="flex -space-x-1.5">
                               {[1, 2, 3].map((i) => (
                                 <div key={i} className="w-5 h-5 rounded-full bg-primary/20 border-2 border-card" />
                               ))}
                             </div>
-                            <span className="text-xs text-muted-foreground">+4 going alone</span>
+                            <span className="text-xs text-muted-foreground">{language === 'da' ? '+4 kommer alene' : '+4 going alone'}</span>
                           </div>
                         </div>
                       </div>
@@ -112,7 +127,7 @@ export function HeroSection({ onGetStarted, onHowItWorks }: HeroSectionProps) {
                     <GlassCard variant="elevated" className="p-3 border-primary/20">
                       <div className="flex items-center gap-2 mb-2">
                         <Users className="h-4 w-4 text-primary" />
-                        <span className="text-xs font-semibold text-primary">Your Group</span>
+                        <span className="text-xs font-semibold text-primary">{language === 'da' ? 'Din Gruppe' : 'Your Group'}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         {['S', 'M', 'J'].map((initial, i) => (
@@ -120,7 +135,7 @@ export function HeroSection({ onGetStarted, onHowItWorks }: HeroSectionProps) {
                             {initial}
                           </div>
                         ))}
-                        <span className="text-xs text-muted-foreground ml-1">3 people matched!</span>
+                        <span className="text-xs text-muted-foreground ml-1">{language === 'da' ? '3 personer matchet!' : '3 people matched!'}</span>
                       </div>
                     </GlassCard>
 
@@ -128,14 +143,14 @@ export function HeroSection({ onGetStarted, onHowItWorks }: HeroSectionProps) {
                     <GlassCard variant="elevated" className="p-3">
                       <div className="flex items-center gap-2 mb-2">
                         <MessageCircle className="h-4 w-4 text-primary" />
-                        <span className="text-xs font-semibold">Group Chat</span>
+                        <span className="text-xs font-semibold">{language === 'da' ? 'Gruppechat' : 'Group Chat'}</span>
                       </div>
                       <div className="space-y-2">
                         <div className="bg-muted/50 rounded-xl rounded-bl-md px-3 py-1.5 text-xs max-w-[80%]">
-                          Hey! Excited for tonight! 🎷
+                          {language === 'da' ? 'Hej! Glæder mig til i aften! 🎷' : 'Hey! Excited for tonight! 🎷'}
                         </div>
                         <div className="bg-primary/10 rounded-xl rounded-br-md px-3 py-1.5 text-xs max-w-[80%] ml-auto">
-                          Me too! See you at 7:45?
+                          {language === 'da' ? 'Det samme! Ses kl 19:45?' : 'Me too! See you at 7:45?'}
                         </div>
                       </div>
                     </GlassCard>
@@ -155,8 +170,8 @@ export function HeroSection({ onGetStarted, onHowItWorks }: HeroSectionProps) {
                     <Users className="h-4 w-4 text-success" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold">Group Formed!</p>
-                    <p className="text-[10px] text-muted-foreground">3 people matched</p>
+                    <p className="text-xs font-semibold">{language === 'da' ? 'Gruppe dannet!' : 'Group Formed!'}</p>
+                    <p className="text-[10px] text-muted-foreground">{language === 'da' ? '3 personer matchet' : '3 people matched'}</p>
                   </div>
                 </div>
               </motion.div>
@@ -173,7 +188,7 @@ export function HeroSection({ onGetStarted, onHowItWorks }: HeroSectionProps) {
                   </div>
                   <div>
                     <p className="text-xs font-semibold">12 Events</p>
-                    <p className="text-[10px] text-muted-foreground">Near you this week</p>
+                    <p className="text-[10px] text-muted-foreground">{language === 'da' ? 'Nær dig denne uge' : 'Near you this week'}</p>
                   </div>
                 </div>
               </motion.div>

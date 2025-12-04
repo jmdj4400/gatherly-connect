@@ -1,14 +1,9 @@
 import { motion } from 'framer-motion';
 import { Users, MapPin, Star } from 'lucide-react';
-
-const stats = [
-  { icon: Star, value: '98%', label: 'would attend again' },
-  { icon: Users, value: '12,000+', label: 'microgroups formed' },
-  { icon: MapPin, value: '7', label: 'cities launching' },
-];
+import { useTranslation } from '@/lib/i18n';
 
 const logos = [
-  'Running Club NYC',
+  'Running Club CPH',
   'Tech Meetups',
   'Wine & Social',
   'Board Game Nights',
@@ -17,6 +12,14 @@ const logos = [
 ];
 
 export function SocialProofSection() {
+  const { language } = useTranslation();
+
+  const stats = [
+    { icon: Star, value: '98%', label: language === 'da' ? 'vil deltage igen' : 'would attend again' },
+    { icon: Users, value: '12,000+', label: language === 'da' ? 'mikrogrupper dannet' : 'microgroups formed' },
+    { icon: MapPin, value: '7', label: language === 'da' ? 'byer lancerer' : 'cities launching' },
+  ];
+
   return (
     <section className="py-16 md:py-24 bg-muted/30 border-y border-border/50">
       <div className="max-w-[1220px] mx-auto px-6">
@@ -28,7 +31,10 @@ export function SocialProofSection() {
           className="text-center mb-12"
         >
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Trusted by communities, bars, runners, and thousands of socially curious people.
+            {language === 'da' 
+              ? 'Brugt af fællesskaber, barer, løbere og tusindvis af socialt nysgerrige mennesker.'
+              : 'Trusted by communities, bars, runners, and thousands of socially curious people.'
+            }
           </p>
         </motion.div>
 

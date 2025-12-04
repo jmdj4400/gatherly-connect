@@ -2,36 +2,39 @@ import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Users, Heart, Target, Sparkles } from 'lucide-react';
-
-const values = [
-  {
-    icon: Users,
-    title: 'Fællesskab først',
-    description: 'Vi tror på, at ægte forbindelser skabes gennem delte oplevelser i virkeligheden.',
-  },
-  {
-    icon: Heart,
-    title: 'Inkluderende',
-    description: 'Alle er velkomne. Vi gør det nemt at møde op alene og gå derfra med nye venner.',
-  },
-  {
-    icon: Target,
-    title: 'Intentionel',
-    description: 'Vores matching sikrer, at du møder mennesker med lignende interesser og energi.',
-  },
-  {
-    icon: Sparkles,
-    title: 'Autentisk',
-    description: 'Ingen swipes, ingen algoritmer der optimerer for engagement. Bare ægte møder.',
-  },
-];
+import { useTranslation } from '@/lib/i18n';
 
 export default function About() {
+  const { t } = useTranslation();
+
+  const values = [
+    {
+      icon: Users,
+      title: t('about.values.community'),
+      description: t('about.values.community.desc'),
+    },
+    {
+      icon: Heart,
+      title: t('about.values.inclusive'),
+      description: t('about.values.inclusive.desc'),
+    },
+    {
+      icon: Target,
+      title: t('about.values.intentional'),
+      description: t('about.values.intentional.desc'),
+    },
+    {
+      icon: Sparkles,
+      title: t('about.values.authentic'),
+      description: t('about.values.authentic.desc'),
+    },
+  ];
+
   return (
     <>
       <Helmet>
-        <title>Om Gatherly | Mød mennesker gennem events</title>
-        <meta name="description" content="Lær om Gatherly's mission om at hjælpe mennesker med at møde nye venner gennem lokale events og oplevelser." />
+        <title>{t('about.title')} | Gatherly</title>
+        <meta name="description" content={t('about.meta')} />
       </Helmet>
       
       <main className="min-h-screen bg-background">
@@ -39,29 +42,26 @@ export default function About() {
           <Link to="/">
             <Button variant="ghost" size="sm" className="mb-8">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Tilbage
+              {t('nav.back')}
             </Button>
           </Link>
 
-          <h1 className="text-4xl font-bold mb-6">Om Gatherly</h1>
+          <h1 className="text-4xl font-bold mb-6">{t('about.title')}</h1>
           
           <div className="prose prose-lg max-w-none">
             <p className="text-xl text-muted-foreground mb-8">
-              Gatherly er bygget på en simpel observation: de bedste venskaber starter, når vi mødes i virkeligheden omkring noget, vi begge elsker.
+              {t('about.intro')}
             </p>
 
             <section className="mb-12">
-              <h2 className="text-2xl font-semibold mb-4">Vores mission</h2>
+              <h2 className="text-2xl font-semibold mb-4">{t('about.mission.title')}</h2>
               <p className="text-muted-foreground">
-                Vi vil gøre det nemt at møde nye mennesker uden det akavede ved at dukke op alene. 
-                Vores platform matcher dig med en lille gruppe ligesindede før eventet, så du altid 
-                har nogen at mødes med. Ingen swipes, ingen uendeligt scrolling – bare ægte forbindelser 
-                gennem delte oplevelser.
+                {t('about.mission.text')}
               </p>
             </section>
 
             <section className="mb-12">
-              <h2 className="text-2xl font-semibold mb-6">Vores værdier</h2>
+              <h2 className="text-2xl font-semibold mb-6">{t('about.values.title')}</h2>
               <div className="grid md:grid-cols-2 gap-6">
                 {values.map((value) => (
                   <div key={value.title} className="p-6 rounded-xl border border-border bg-card">
@@ -74,26 +74,22 @@ export default function About() {
             </section>
 
             <section className="mb-12">
-              <h2 className="text-2xl font-semibold mb-4">Vores historie</h2>
+              <h2 className="text-2xl font-semibold mb-4">{t('about.history.title')}</h2>
               <p className="text-muted-foreground mb-4">
-                Gatherly startede i 2024 med en frustreret erkendelse: det er svært at møde nye 
-                mennesker som voksen. Dating-apps har skabt en kultur af swipes, men der mangler 
-                et sted, hvor vi bare kan møde ligesindede til fælles oplevelser.
+                {t('about.history.p1')}
               </p>
               <p className="text-muted-foreground">
-                Vi byggede Gatherly for alle dem, der gerne vil til koncerten, løbeklubben eller 
-                wine-tastingen, men som holder sig tilbage, fordi de ikke har nogen at tage med. 
-                Nu kan du melde dig til alene og blive matchet med andre, der også kommer alene.
+                {t('about.history.p2')}
               </p>
             </section>
 
             <section className="text-center py-8 px-6 rounded-xl bg-muted/50">
-              <h2 className="text-2xl font-semibold mb-4">Vil du være med?</h2>
+              <h2 className="text-2xl font-semibold mb-4">{t('about.join.title')}</h2>
               <p className="text-muted-foreground mb-6">
-                Vi leder altid efter passionerede mennesker, der vil hjælpe med at bygge fremtidens sociale platform.
+                {t('about.join.text')}
               </p>
               <Link to="/careers">
-                <Button>Se ledige stillinger</Button>
+                <Button>{t('about.join.cta')}</Button>
               </Link>
             </section>
           </div>
