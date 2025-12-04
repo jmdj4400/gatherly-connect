@@ -240,6 +240,61 @@ The `capacitor-assets.config.json` file controls asset generation:
 - `android/app/src/main/res/mipmap-*/` (icons)
 - `android/app/src/main/res/drawable/` (splash)
 
+## Deep Linking
+
+### Custom URL Scheme
+
+The app supports the `gatherly://` URL scheme for deep links:
+
+- `gatherly://event/EVENT_ID` - Open an event
+- `gatherly://chat/GROUP_ID` - Open a group chat
+- `gatherly://profile` - Open profile
+- `gatherly://explore` - Open explore page
+
+### Universal Links (iOS)
+
+To enable universal links on iOS:
+
+1. **Add Associated Domains capability** in Xcode:
+   - Open `ios/App/App.xcworkspace`
+   - Select target → Signing & Capabilities
+   - Add "Associated Domains" capability
+   - Add: `applinks:gatherly.app`
+
+2. **Create apple-app-site-association file** on your domain:
+   ```json
+   {
+     "applinks": {
+       "apps": [],
+       "details": [{
+         "appID": "TEAM_ID.app.lovable.e69de0b4bdc64c90869d333dc3c5ea8a",
+         "paths": ["/event/*", "/chat/*", "/c/*"]
+       }]
+     }
+   }
+   ```
+
+### App Links (Android)
+
+To enable app links on Android, add to `android/app/src/main/AndroidManifest.xml`:
+
+```xml
+<intent-filter android:autoVerify="true">
+  <action android:name="android.intent.action.VIEW" />
+  <category android:name="android.intent.category.DEFAULT" />
+  <category android:name="android.intent.category.BROWSABLE" />
+  <data android:scheme="https" android:host="gatherly.app" android:pathPrefix="/event" />
+  <data android:scheme="https" android:host="gatherly.app" android:pathPrefix="/chat" />
+</intent-filter>
+
+<intent-filter>
+  <action android:name="android.intent.action.VIEW" />
+  <category android:name="android.intent.category.DEFAULT" />
+  <category android:name="android.intent.category.BROWSABLE" />
+  <data android:scheme="gatherly" />
+</intent-filter>
+```
+
 ## Troubleshooting
 
 ### Common Issues
@@ -260,6 +315,11 @@ npx cap sync
 **Push notifications not working:**
 - iOS: Verify APNs certificate/key is configured
 - Android: Verify `google-services.json` is in place
+
+**Deep links not working:**
+- iOS: Verify associated domains are correctly configured
+- Android: Verify intent-filters in AndroidManifest.xml
+- Test with: `adb shell am start -a android.intent.action.VIEW -d "gatherly://event/123"`
 
 ### Getting Help
 
@@ -287,3 +347,17 @@ npx cap sync
 | @capacitor/status-bar | Status bar control |
 | @capacitor/app | App lifecycle events |
 | @capacitor/haptics | Vibration feedback |
+
+## Build Checklist
+
+Before submitting to app stores, ensure:
+
+- [ ] App icons generated for all sizes
+- [ ] Splash screens generated for all sizes
+- [ ] Push notification certificates configured
+- [ ] Deep links tested and working
+- [ ] Privacy policy page accessible
+- [ ] Terms of service page accessible
+- [ ] All features tested on physical devices
+- [ ] Performance tested (no major lag or crashes)
+- [ ] Offline mode works correctly

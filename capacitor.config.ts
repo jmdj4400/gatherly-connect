@@ -31,10 +31,13 @@ const config: CapacitorConfig = {
     contentInset: 'automatic',
     preferredContentMode: 'mobile',
     scheme: 'gatherly',
+    // Universal Links - add your domain in Apple Developer Portal
+    // and configure apple-app-site-association file on server
   },
   android: {
     allowMixedContent: true,
     backgroundColor: '#0a0a0a',
+    // Deep links handled via intent-filter in AndroidManifest.xml
   },
 };
 
