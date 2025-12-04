@@ -62,6 +62,18 @@ const translations: Record<Language, Record<string, string>> = {
     'landing.testimonials.title': 'Elsket af rigtige mennesker',
     'landing.testimonials.subtitle': 'Bliv en del af tusindvis, der har opdaget glæden ved at møde mennesker gennem fælles oplevelser',
     
+    // Showcase Section
+    'landing.showcase.title': 'Se Gatherly i aktion',
+    'landing.showcase.subtitle': 'Hver skærm er designet til at gøre det nemt at connecte',
+    'landing.showcase.event_feed.title': 'Opdag events i nærheden',
+    'landing.showcase.event_feed.desc': 'Gennemse en kurateret feed af lokale events der matcher dine interesser. Filtrer efter kategori, dato eller afstand.',
+    'landing.showcase.event_detail.title': 'Detaljerede eventbeskrivelser',
+    'landing.showcase.event_detail.desc': 'Se hvem andre der kommer alene, læs om stedet, og beslut om det er det rigtige for dig.',
+    'landing.showcase.chat.title': 'Gruppechat der føles naturligt',
+    'landing.showcase.chat.desc': 'Bryd isen inden I mødes. Del begejstring, koordiner ankomsttider, og lær din gruppe at kende.',
+    'landing.showcase.organizer.title': 'Kraftfulde arrangørværktøjer',
+    'landing.showcase.organizer.desc': 'For venues og fællesskaber: administrer events, track fremmøde, og vækst dit community med analyser.',
+    
     // App - Explore
     'explore.all_cities': 'Alle byer',
     'explore.events_nearby': 'Events i nærheden',
@@ -424,6 +436,18 @@ const translations: Record<Language, Record<string, string>> = {
     
     'landing.testimonials.title': 'Loved by Real People',
     'landing.testimonials.subtitle': 'Join thousands who have discovered the joy of meeting people through shared experiences',
+    
+    // Showcase Section
+    'landing.showcase.title': 'See Gatherly in Action',
+    'landing.showcase.subtitle': 'Every screen is designed to make connecting feel effortless',
+    'landing.showcase.event_feed.title': 'Discover Events Near You',
+    'landing.showcase.event_feed.desc': 'Browse a curated feed of local events that match your interests. Filter by category, date, or distance.',
+    'landing.showcase.event_detail.title': 'Rich Event Details',
+    'landing.showcase.event_detail.desc': "See who else is going alone, read about the venue, and decide if it's the right fit for you.",
+    'landing.showcase.chat.title': 'Group Chat That Feels Natural',
+    'landing.showcase.chat.desc': 'Break the ice before you meet. Share excitement, coordinate arrival times, and get to know your group.',
+    'landing.showcase.organizer.title': 'Powerful Organizer Tools',
+    'landing.showcase.organizer.desc': 'For venues and communities: manage events, track attendance, and grow your community with analytics.',
     
     // App - Explore
     'explore.all_cities': 'All Cities',

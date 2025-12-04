@@ -1,28 +1,13 @@
 import { motion } from 'framer-motion';
 import { GlassCard } from '@/components/ui/glass-card';
 import { Calendar, Users, MessageCircle, LayoutDashboard, MapPin, Clock, Star, Send } from 'lucide-react';
+import { useTranslation } from '@/lib/i18n';
 
-const showcases = [
-  {
-    title: 'Discover Events Near You',
-    description: 'Browse a curated feed of local events that match your interests. Filter by category, date, or distance.',
-    visual: 'event-feed',
-  },
-  {
-    title: 'Rich Event Details',
-    description: 'See who else is going alone, read about the venue, and decide if it\'s the right fit for you.',
-    visual: 'event-detail',
-  },
-  {
-    title: 'Group Chat That Feels Natural',
-    description: 'Break the ice before you meet. Share excitement, coordinate arrival times, and get to know your group.',
-    visual: 'chat',
-  },
-  {
-    title: 'Powerful Organizer Tools',
-    description: 'For venues and communities: manage events, track attendance, and grow your community with analytics.',
-    visual: 'organizer',
-  },
+const showcaseKeys = [
+  { titleKey: 'landing.showcase.event_feed.title', descKey: 'landing.showcase.event_feed.desc', visual: 'event-feed' },
+  { titleKey: 'landing.showcase.event_detail.title', descKey: 'landing.showcase.event_detail.desc', visual: 'event-detail' },
+  { titleKey: 'landing.showcase.chat.title', descKey: 'landing.showcase.chat.desc', visual: 'chat' },
+  { titleKey: 'landing.showcase.organizer.title', descKey: 'landing.showcase.organizer.desc', visual: 'organizer' },
 ];
 
 function MockEventFeed() {
@@ -144,6 +129,8 @@ function MockOrganizer() {
 }
 
 export function ShowcaseSection() {
+  const { t } = useTranslation();
+  
   const visuals: Record<string, React.ReactNode> = {
     'event-feed': <MockEventFeed />,
     'event-detail': <MockEventDetail />,
@@ -162,17 +149,17 @@ export function ShowcaseSection() {
           className="text-center mb-16"
         >
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
-            See Gatherly in Action
+            {t('landing.showcase.title')}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Every screen is designed to make connecting feel effortless
+            {t('landing.showcase.subtitle')}
           </p>
         </motion.div>
 
         <div className="space-y-16 md:space-y-24">
-          {showcases.map((item, index) => (
+          {showcaseKeys.map((item, index) => (
             <motion.div
-              key={item.title}
+              key={item.visual}
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-50px' }}
@@ -183,10 +170,10 @@ export function ShowcaseSection() {
             >
               <div className={index % 2 === 1 ? 'md:col-start-2' : ''}>
                 <h3 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
-                  {item.title}
+                  {t(item.titleKey)}
                 </h3>
                 <p className="text-lg text-muted-foreground leading-relaxed">
-                  {item.description}
+                  {t(item.descKey)}
                 </p>
               </div>
               
