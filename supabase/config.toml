@@ -1,11 +1,5 @@
 project_id = "yuabwnhulzhnoyvnvqrw"
 
-[functions.create-boost-checkout]
-verify_jwt = false
-
-[functions.health]
-verify_jwt = false
-
 [api]
 enabled = true
 port = 54321
@@ -27,62 +21,70 @@ api_url = "http://localhost"
 enabled = true
 site_url = "http://localhost:3000"
 
-[functions.admin-safety]
-verify_jwt = false
-
-[functions.attendance]
-verify_jwt = false
-
-[functions.csv-import]
-verify_jwt = false
-
-[functions.generate-event-assets]
-verify_jwt = false
-
-[functions.generate-recurring-events]
-verify_jwt = false
-
-[functions.get-vapid-key]
-verify_jwt = false
-
-[functions.join-event]
-verify_jwt = false
-
-[functions.moderation]
-verify_jwt = false
-
-[functions.org-management]
-verify_jwt = false
-
-[functions.push-subscribe]
-verify_jwt = false
-
-[functions.recommended-events]
-verify_jwt = false
-
-[functions.regenerate-groups]
-verify_jwt = false
-
-[functions.send-notification]
-verify_jwt = false
-
-[functions.track-engagement]
-verify_jwt = false
-
-[functions.vibe-score]
-verify_jwt = false
-
-[functions.cleanup-stale-groups]
-verify_jwt = false
-
-[functions.create-checkout]
+# Public endpoints - no JWT required
+[functions.health]
 verify_jwt = false
 
 [functions.stripe-webhook]
 verify_jwt = false
 
-[functions.gdpr-export]
+[functions.get-vapid-key]
 verify_jwt = false
 
+# Authenticated endpoints - JWT required
+[functions.admin-safety]
+verify_jwt = true
+
+[functions.attendance]
+verify_jwt = true
+
+[functions.csv-import]
+verify_jwt = true
+
+[functions.create-boost-checkout]
+verify_jwt = true
+
+[functions.create-checkout]
+verify_jwt = true
+
+[functions.gdpr-export]
+verify_jwt = true
+
 [functions.gdpr-delete]
-verify_jwt = false
+verify_jwt = true
+
+[functions.generate-event-assets]
+verify_jwt = true
+
+[functions.generate-recurring-events]
+verify_jwt = true
+
+[functions.join-event]
+verify_jwt = true
+
+[functions.moderation]
+verify_jwt = true
+
+[functions.org-management]
+verify_jwt = true
+
+[functions.push-subscribe]
+verify_jwt = true
+
+[functions.recommended-events]
+verify_jwt = true
+
+[functions.regenerate-groups]
+verify_jwt = true
+
+[functions.send-notification]
+verify_jwt = true
+
+[functions.track-engagement]
+verify_jwt = true
+
+[functions.vibe-score]
+verify_jwt = true
+
+[functions.cleanup-stale-groups]
+verify_jwt = true
