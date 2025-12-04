@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/auth';
 import { useTranslation } from '@/lib/i18n';
+import { validatePassword } from '@/lib/password-validation';
+import { PasswordStrengthIndicator } from '@/components/auth/PasswordStrengthIndicator';
 
 type AuthMode = 'login' | 'signup';
 
@@ -26,6 +28,20 @@ export default function Auth() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate password on signup
+    if (mode === 'signup') {
+      const validation = validatePassword(password);
+      if (!validation.isValid) {
+        toast({
+          title: 'Adgangskoden opfylder ikke kravene',
+          description: validation.errors[0],
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+    
     setLoading(true);
 
     try {
@@ -174,7 +190,7 @@ export default function Auth() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 pr-10 h-12"
                   required
-                  minLength={6}
+                  minLength={8}
                 />
                 <button
                   type="button"
@@ -184,6 +200,7 @@ export default function Auth() {
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
+              {mode === 'signup' && <PasswordStrengthIndicator password={password} />}
             </div>
 
             <Button
