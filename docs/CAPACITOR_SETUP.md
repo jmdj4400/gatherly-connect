@@ -161,28 +161,84 @@ npx cap sync
 
 ## App Icons and Splash Screens
 
-### Generating Assets
+### Source Images Required
 
-Use a tool like [capacitor-assets](https://github.com/ionic-team/capacitor-assets) to generate all required sizes:
+Create these source images in the `resources/` folder:
+
+| File | Size | Description |
+|------|------|-------------|
+| `resources/icon.png` | 1024x1024 | Main app icon (PNG, no transparency for iOS) |
+| `resources/splash.png` | 2732x2732 | Light mode splash screen |
+| `resources/splash-dark.png` | 2732x2732 | Dark mode splash screen (optional) |
+
+### Design Guidelines
+
+**App Icon:**
+- Use a simple, recognizable design
+- Avoid text (too small on most sizes)
+- iOS will automatically round corners
+- Android uses adaptive icons (foreground + background)
+
+**Splash Screen:**
+- Center your logo/branding
+- Use your brand background color
+- Keep important content in the center 1200x1200 safe zone
+- Same image works for all device sizes
+
+### Generating All Sizes
+
+After adding your source images, run:
 
 ```bash
-npm install -g @capacitor/assets
-npx capacitor-assets generate
+# Generate all icon and splash screen sizes
+npx @capacitor/assets generate
+
+# Or generate only icons
+npx @capacitor/assets generate --iconOnly
+
+# Or generate only splash screens
+npx @capacitor/assets generate --splashOnly
 ```
 
-Place your source images:
-- `resources/icon.png` - 1024x1024 app icon
-- `resources/splash.png` - 2732x2732 splash screen
+This automatically generates:
 
-### Manual Asset Locations
+**iOS (in `ios/App/App/Assets.xcassets/`):**
+- AppIcon.appiconset (20x20 to 1024x1024)
+- Splash.imageset (portrait and landscape)
+
+**Android (in `android/app/src/main/res/`):**
+- mipmap-mdpi through mipmap-xxxhdpi (48x48 to 192x192)
+- drawable/splash.png
+- Adaptive icon foreground/background
+
+### Configuration
+
+The `capacitor-assets.config.json` file controls asset generation:
+
+```json
+{
+  "iconBackgroundColor": "#0a0a0a",
+  "splashBackgroundColor": "#0a0a0a",
+  "ios": {
+    "iconOriginal": "resources/icon.png",
+    "splashOriginal": "resources/splash.png"
+  },
+  "android": {
+    "iconOriginal": "resources/icon.png",
+    "splashOriginal": "resources/splash.png"
+  }
+}
+```
+
+### Manual Asset Locations (Reference)
 
 **iOS:**
 - `ios/App/App/Assets.xcassets/AppIcon.appiconset/`
 - `ios/App/App/Assets.xcassets/Splash.imageset/`
 
 **Android:**
-- `android/app/src/main/res/mipmap-*/`
-- `android/app/src/main/res/drawable/splash.png`
+- `android/app/src/main/res/mipmap-*/` (icons)
+- `android/app/src/main/res/drawable/` (splash)
 
 ## Troubleshooting
 

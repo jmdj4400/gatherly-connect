@@ -1,0 +1,19 @@
+{
+  "$schema": "https://unpkg.com/@capacitor/assets@latest/capacitor-assets.schema.json",
+  "iconBackgroundColor": "#0a0a0a",
+  "iconBackgroundColorDark": "#0a0a0a",
+  "splashBackgroundColor": "#0a0a0a",
+  "splashBackgroundColorDark": "#0a0a0a",
+  "ios": {
+    "iconOriginal": "resources/icon.png",
+    "splashOriginal": "resources/splash.png",
+    "splashOriginalDark": "resources/splash-dark.png"
+  },
+  "android": {
+    "iconOriginal": "resources/icon.png",
+    "iconForegroundOriginal": "resources/icon.png",
+    "iconBackgroundOriginal": "#0a0a0a",
+    "splashOriginal": "resources/splash.png",
+    "splashOriginalDark": "resources/splash-dark.png"
+  }
+}
