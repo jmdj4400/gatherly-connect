@@ -42,6 +42,12 @@ const Premium = lazy(() => import("./pages/Premium"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Cookies = lazy(() => import("./pages/Cookies"));
+const About = lazy(() => import("./pages/About"));
+const Careers = lazy(() => import("./pages/Careers"));
+const Press = lazy(() => import("./pages/Press"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Partners = lazy(() => import("./pages/Partners"));
+const Stories = lazy(() => import("./pages/Stories"));
 
 const queryClient = new QueryClient();
 
@@ -126,6 +132,12 @@ const App = () => {
                   <Route path="/privacy" element={<Privacy />} />
                   <Route path="/terms" element={<Terms />} />
                   <Route path="/cookies" element={<Cookies />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/careers" element={<Careers />} />
+                  <Route path="/press" element={<Press />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/partners" element={<Partners />} />
+                  <Route path="/stories" element={<Stories />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
