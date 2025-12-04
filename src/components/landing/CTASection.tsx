@@ -1,12 +1,15 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/lib/i18n';
 
 interface CTASectionProps {
   onGetStarted: () => void;
 }
 
 export function CTASection({ onGetStarted }: CTASectionProps) {
+  const { t, language } = useTranslation();
+
   return (
     <section className="py-16 md:py-24 relative overflow-hidden">
       {/* Background Gradient */}
@@ -26,21 +29,33 @@ export function CTASection({ onGetStarted }: CTASectionProps) {
           </div>
 
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-6">
-            Ready to meet people through{' '}
-            <span className="gradient-brand-text">REAL</span> experiences?
+            {language === 'da' ? (
+              <>
+                Klar til at møde mennesker gennem{' '}
+                <span className="gradient-brand-text">ÆGTE</span> oplevelser?
+              </>
+            ) : (
+              <>
+                Ready to meet people through{' '}
+                <span className="gradient-brand-text">REAL</span> experiences?
+              </>
+            )}
           </h2>
 
           <p className="text-lg text-muted-foreground mb-8 max-w-lg mx-auto">
-            Join our early access list and be the first to know when Gatherly launches in your city.
+            {t('landing.cta.subtitle')}
           </p>
 
           <Button size="xl" variant="gradient" onClick={onGetStarted} className="group">
-            Join the Early Access List
+            {t('landing.cta.button')}
             <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
           </Button>
 
           <p className="text-sm text-muted-foreground mt-4">
-            Free forever for attendees • No spam, we promise
+            {language === 'da' 
+              ? 'Gratis for altid for deltagere • Ingen spam, vi lover'
+              : 'Free forever for attendees • No spam, we promise'
+            }
           </p>
         </motion.div>
       </div>

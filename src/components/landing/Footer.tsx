@@ -1,31 +1,8 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Instagram, Twitter, Linkedin, Mail } from 'lucide-react';
-
-const footerLinks = {
-  Product: [
-    { label: 'How It Works', href: '#how-it-works' },
-    { label: 'Features', href: '#features' },
-    { label: 'For Communities', href: '#communities' },
-    { label: 'Pricing', href: '#pricing' },
-  ],
-  Company: [
-    { label: 'About Us', href: '/about' },
-    { label: 'Careers', href: '/careers' },
-    { label: 'Press', href: '/press' },
-    { label: 'Contact', href: '/contact' },
-  ],
-  'For Venues': [
-    { label: 'Partner With Us', href: '/partners' },
-    { label: 'Venue Dashboard', href: '/venue-panel' },
-    { label: 'Success Stories', href: '/stories' },
-  ],
-  Legal: [
-    { label: 'Privacy Policy', href: '/privacy' },
-    { label: 'Terms of Service', href: '/terms' },
-    { label: 'Cookie Policy', href: '/cookies' },
-  ],
-};
+import { useTranslation } from '@/lib/i18n';
+import { LanguageToggle } from '@/components/LanguageToggle';
 
 const socialLinks = [
   { icon: Instagram, href: 'https://instagram.com/gatherly', label: 'Instagram' },
@@ -35,6 +12,33 @@ const socialLinks = [
 ];
 
 export function Footer() {
+  const { t } = useTranslation();
+
+  const footerLinks = {
+    [t('footer.product')]: [
+      { label: t('footer.product.how'), href: '#how-it-works' },
+      { label: t('footer.product.features'), href: '#features' },
+      { label: t('footer.product.communities'), href: '#communities' },
+      { label: t('footer.product.pricing'), href: '#pricing' },
+    ],
+    [t('footer.company')]: [
+      { label: t('footer.company.about'), href: '/about' },
+      { label: t('footer.company.careers'), href: '/careers' },
+      { label: t('footer.company.press'), href: '/press' },
+      { label: t('footer.company.contact'), href: '/contact' },
+    ],
+    [t('footer.venues')]: [
+      { label: t('footer.venues.partner'), href: '/partners' },
+      { label: t('footer.venues.dashboard'), href: '/venue-panel' },
+      { label: t('footer.venues.stories'), href: '/stories' },
+    ],
+    [t('footer.legal')]: [
+      { label: t('footer.legal.privacy'), href: '/privacy' },
+      { label: t('footer.legal.terms'), href: '/terms' },
+      { label: t('footer.legal.cookies'), href: '/cookies' },
+    ],
+  };
+
   return (
     <footer className="border-t border-border/50">
       {/* Gradient Divider */}
@@ -53,7 +57,7 @@ export function Footer() {
               <span className="text-2xl font-bold gradient-brand-text">Gatherly</span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-              Meet people through real events. Join alone, leave with friends.
+              {t('footer.tagline')}
             </p>
             <div className="flex gap-3">
               {socialLinks.map((social) => (
@@ -100,11 +104,14 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-border/50 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} Gatherly. All rights reserved.
+            © {new Date().getFullYear()} Gatherly. {t('footer.copyright')}
           </p>
-          <p className="text-sm text-muted-foreground">
-            Made with ❤️ for people who show up alone
-          </p>
+          <div className="flex items-center gap-4">
+            <p className="text-sm text-muted-foreground">
+              {t('footer.made_with')}
+            </p>
+            <LanguageToggle />
+          </div>
         </div>
       </div>
     </footer>

@@ -3,76 +3,67 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, TrendingUp, Users, Calendar, BarChart3, Check } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-
-const benefits = [
-  {
-    icon: Users,
-    title: 'Nye gæster',
-    description: 'Få adgang til tusindvis af eventlystne mennesker, der leder efter nye oplevelser.',
-  },
-  {
-    icon: Calendar,
-    title: 'Automatisk promovering',
-    description: 'Dine events vises automatisk til relevante brugere baseret på deres interesser.',
-  },
-  {
-    icon: TrendingUp,
-    title: 'Øget engagement',
-    description: 'Vores mikrogrupper sikrer, at gæster faktisk møder op og har en god oplevelse.',
-  },
-  {
-    icon: BarChart3,
-    title: 'Detaljeret indsigt',
-    description: 'Se hvem der deltager, track no-shows og få feedback fra deltagerne.',
-  },
-];
-
-const plans = [
-  {
-    name: 'Starter',
-    price: 'Gratis',
-    description: 'Perfekt til at komme i gang',
-    features: [
-      'Op til 5 events/måned',
-      'Grundlæggende analytics',
-      'Automatisk matching',
-      'Email-support',
-    ],
-  },
-  {
-    name: 'Pro',
-    price: '499 kr/md',
-    description: 'For professionelle arrangører',
-    features: [
-      'Ubegrænsede events',
-      'Avanceret analytics',
-      'Prioriteret visning',
-      'Custom branding',
-      'CSV-import af events',
-      'Dedikeret support',
-    ],
-    popular: true,
-  },
-  {
-    name: 'Enterprise',
-    price: 'Kontakt os',
-    description: 'For større organisationer',
-    features: [
-      'Alt i Pro',
-      'API-adgang',
-      'White-label mulighed',
-      'Dedikeret account manager',
-      'Custom integrationer',
-    ],
-  },
-];
+import { useTranslation } from '@/lib/i18n';
 
 export default function Partners() {
+  const { t, language } = useTranslation();
+
+  const benefits = [
+    {
+      icon: Users,
+      title: t('partners.benefit.guests'),
+      description: t('partners.benefit.guests.desc'),
+    },
+    {
+      icon: Calendar,
+      title: t('partners.benefit.promo'),
+      description: t('partners.benefit.promo.desc'),
+    },
+    {
+      icon: TrendingUp,
+      title: t('partners.benefit.engagement'),
+      description: t('partners.benefit.engagement.desc'),
+    },
+    {
+      icon: BarChart3,
+      title: t('partners.benefit.insights'),
+      description: t('partners.benefit.insights.desc'),
+    },
+  ];
+
+  const plans = [
+    {
+      name: t('partners.plan.starter'),
+      price: language === 'da' ? 'Gratis' : 'Free',
+      description: t('partners.plan.starter.desc'),
+      features: language === 'da' 
+        ? ['Op til 5 events/måned', 'Grundlæggende analytics', 'Automatisk matching', 'Email-support']
+        : ['Up to 5 events/month', 'Basic analytics', 'Automatic matching', 'Email support'],
+    },
+    {
+      name: t('partners.plan.pro'),
+      price: language === 'da' ? '499 kr/md' : '€49/mo',
+      description: t('partners.plan.pro.desc'),
+      features: language === 'da'
+        ? ['Ubegrænsede events', 'Avanceret analytics', 'Prioriteret visning', 'Custom branding', 'CSV-import af events', 'Dedikeret support']
+        : ['Unlimited events', 'Advanced analytics', 'Priority placement', 'Custom branding', 'CSV event import', 'Dedicated support'],
+      popular: true,
+    },
+    {
+      name: t('partners.plan.enterprise'),
+      price: t('partners.cta.contact'),
+      description: t('partners.plan.enterprise.desc'),
+      features: language === 'da'
+        ? ['Alt i Pro', 'API-adgang', 'White-label mulighed', 'Dedikeret account manager', 'Custom integrationer']
+        : ['Everything in Pro', 'API access', 'White-label option', 'Dedicated account manager', 'Custom integrations'],
+    },
+  ];
+
   return (
     <>
       <Helmet>
-        <title>Bliv partner | Gatherly</title>
-        <meta name="description" content="Bliv partner med Gatherly og få adgang til engagerede gæster til dine events. Gratis at starte." />
+        <title>{t('partners.title')} | Gatherly</title>
+        <meta name="description" content={t('partners.meta')} />
       </Helmet>
       
       <main className="min-h-screen bg-background">
@@ -80,19 +71,19 @@ export default function Partners() {
           <Link to="/">
             <Button variant="ghost" size="sm" className="mb-8">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Tilbage
+              {t('nav.back')}
             </Button>
           </Link>
 
           <div className="text-center mb-16">
-            <h1 className="text-4xl font-bold mb-4">Bliv partner med Gatherly</h1>
+            <h1 className="text-4xl font-bold mb-4">{t('partners.title')}</h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Få flere gæster til dine events med engagerede mennesker, der faktisk møder op.
+              {t('partners.subtitle')}
             </p>
           </div>
 
           <section className="mb-16">
-            <h2 className="text-2xl font-semibold mb-8 text-center">Hvorfor partnere vælger Gatherly</h2>
+            <h2 className="text-2xl font-semibold mb-8 text-center">{t('partners.why.title')}</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
               {benefits.map((benefit) => (
                 <Card key={benefit.title}>
@@ -109,13 +100,13 @@ export default function Partners() {
           </section>
 
           <section className="mb-16">
-            <h2 className="text-2xl font-semibold mb-8 text-center">Priser</h2>
+            <h2 className="text-2xl font-semibold mb-8 text-center">{t('partners.pricing')}</h2>
             <div className="grid md:grid-cols-3 gap-6">
               {plans.map((plan) => (
                 <Card key={plan.name} className={plan.popular ? 'border-primary ring-2 ring-primary' : ''}>
                   <CardHeader>
                     {plan.popular && (
-                      <span className="text-xs font-medium text-primary mb-2">Mest populære</span>
+                      <span className="text-xs font-medium text-primary mb-2">{t('partners.plan.popular')}</span>
                     )}
                     <CardTitle>{plan.name}</CardTitle>
                     <CardDescription>{plan.description}</CardDescription>
@@ -135,8 +126,8 @@ export default function Partners() {
                       variant={plan.popular ? 'default' : 'outline'}
                       asChild
                     >
-                      <a href="mailto:partners@gatherly.app?subject=Partnerskab - {{plan.name}}">
-                        {plan.price === 'Kontakt os' ? 'Kontakt os' : 'Kom i gang'}
+                      <a href="mailto:partners@gatherly.app">
+                        {plan.price === t('partners.cta.contact') ? t('partners.cta.contact') : language === 'da' ? 'Kom i gang' : 'Get started'}
                       </a>
                     </Button>
                   </CardContent>
@@ -146,16 +137,16 @@ export default function Partners() {
           </section>
 
           <section className="text-center py-12 px-6 rounded-xl bg-muted/50">
-            <h2 className="text-2xl font-semibold mb-4">Klar til at komme i gang?</h2>
+            <h2 className="text-2xl font-semibold mb-4">{t('partners.cta.title')}</h2>
             <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-              Start gratis i dag og se, hvordan Gatherly kan hjælpe dig med at fylde dine events med engagerede gæster.
+              {t('partners.cta.text')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" asChild>
-                <a href="mailto:partners@gatherly.app">Kontakt os</a>
+                <a href="mailto:partners@gatherly.app">{t('partners.cta.contact')}</a>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link to="/venue">Gå til Venue Dashboard</Link>
+                <Link to="/venue">{t('partners.cta.dashboard')}</Link>
               </Button>
             </div>
           </section>

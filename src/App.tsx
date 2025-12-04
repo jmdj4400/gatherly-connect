@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/lib/auth";
+import { I18nProvider } from "@/lib/i18n";
 import { OfflineBanner } from "@/components/pwa/OfflineBanner";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { CookieConsent } from "@/components/cookie/CookieConsent";
@@ -93,6 +94,7 @@ const App = () => {
   return (
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
+        <I18nProvider>
         <NativeErrorBoundary>
           <TooltipProvider>
             <AuthProvider>
@@ -145,6 +147,7 @@ const App = () => {
           </AuthProvider>
         </TooltipProvider>
         </NativeErrorBoundary>
+        </I18nProvider>
       </QueryClientProvider>
     </HelmetProvider>
   );

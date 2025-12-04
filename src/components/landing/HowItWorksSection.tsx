@@ -1,32 +1,35 @@
 import { motion } from 'framer-motion';
 import { Search, Users, PartyPopper, ArrowRight } from 'lucide-react';
 import { GlassCard } from '@/components/ui/glass-card';
-
-const steps = [
-  {
-    icon: Search,
-    step: '01',
-    title: 'Discover Events',
-    description: 'Browse local events that match your interests. From wine tastings to running clubs, find activities you actually want to do.',
-    visual: 'event-feed',
-  },
-  {
-    icon: Users,
-    step: '02',
-    title: 'Join Alone, Get Matched',
-    description: "Press 'Join Alone' and our smart algorithm matches you with 2-4 compatible people based on interests and social energy.",
-    visual: 'matching',
-  },
-  {
-    icon: PartyPopper,
-    step: '03',
-    title: 'Meet Up & Enjoy',
-    description: 'Chat with your group before the event, coordinate meet-up spots, and arrive together. Making friends has never been easier.',
-    visual: 'meetup',
-  },
-];
+import { useTranslation } from '@/lib/i18n';
 
 export function HowItWorksSection() {
+  const { t, language } = useTranslation();
+
+  const steps = [
+    {
+      icon: Search,
+      step: '01',
+      title: t('landing.how_it_works.step1.title'),
+      description: t('landing.how_it_works.step1.desc'),
+      visual: 'event-feed',
+    },
+    {
+      icon: Users,
+      step: '02',
+      title: t('landing.how_it_works.step2.title'),
+      description: t('landing.how_it_works.step2.desc'),
+      visual: 'matching',
+    },
+    {
+      icon: PartyPopper,
+      step: '03',
+      title: t('landing.how_it_works.step3.title'),
+      description: t('landing.how_it_works.step3.desc'),
+      visual: 'meetup',
+    },
+  ];
+
   return (
     <section id="how-it-works" className="py-16 md:py-24">
       <div className="max-w-[1220px] mx-auto px-6">
@@ -38,10 +41,13 @@ export function HowItWorksSection() {
           className="text-center mb-16"
         >
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
-            How Gatherly Works
+            {t('landing.how_it_works.title')}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Three simple steps to go from scrolling alone to socializing together
+            {language === 'da' 
+              ? 'Tre simple trin fra at scrolle alene til at være social sammen'
+              : 'Three simple steps to go from scrolling alone to socializing together'
+            }
           </p>
         </motion.div>
 
@@ -101,8 +107,8 @@ export function HowItWorksSection() {
                         ))}
                       </div>
                       <div className="text-center">
-                        <p className="text-xs font-semibold text-primary">Matched!</p>
-                        <p className="text-[10px] text-muted-foreground">4 people</p>
+                        <p className="text-xs font-semibold text-primary">{language === 'da' ? 'Matchet!' : 'Matched!'}</p>
+                        <p className="text-[10px] text-muted-foreground">{language === 'da' ? '4 personer' : '4 people'}</p>
                       </div>
                     </div>
                   )}
@@ -111,8 +117,8 @@ export function HowItWorksSection() {
                       <div className="w-12 h-12 rounded-full bg-success/20 flex items-center justify-center mx-auto mb-2">
                         <PartyPopper className="h-6 w-6 text-success" />
                       </div>
-                      <p className="text-xs font-semibold">Meet at 7:45 PM</p>
-                      <p className="text-[10px] text-muted-foreground">Main entrance</p>
+                      <p className="text-xs font-semibold">{language === 'da' ? 'Mødested kl. 19:45' : 'Meet at 7:45 PM'}</p>
+                      <p className="text-[10px] text-muted-foreground">{language === 'da' ? 'Hovedindgangen' : 'Main entrance'}</p>
                     </div>
                   )}
                 </div>
