@@ -16,6 +16,7 @@ import { useEngagement } from '@/hooks/useEngagement';
 import { StreakDisplay } from '@/components/engagement/StreakDisplay';
 import { BadgeGrid } from '@/components/engagement/BadgeGrid';
 import { UpgradeCTA } from '@/components/profile/UpgradeCTA';
+import { GDPRSettings } from '@/components/profile/GDPRSettings';
 
 const INTEREST_EMOJIS: Record<string, string> = {
   music: '🎵',
@@ -263,6 +264,13 @@ export default function Profile() {
                 )}
               </div>
             </GlassCard>
+          </StaggerItem>
+
+          {/* GDPR Settings */}
+          <StaggerItem>
+            <div className="mt-4">
+              <GDPRSettings />
+            </div>
           </StaggerItem>
 
           {/* Actions */}
