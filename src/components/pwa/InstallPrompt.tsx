@@ -2,6 +2,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Download, X, Smartphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePWAInstall } from '@/lib/pwa';
+import { useTranslation } from '@/lib/i18n';
 
 interface InstallPromptProps {
   onDismiss?: () => void;
@@ -9,6 +10,7 @@ interface InstallPromptProps {
 
 export function InstallPrompt({ onDismiss }: InstallPromptProps) {
   const { isInstalled, canInstall, install } = usePWAInstall();
+  const { t } = useTranslation();
 
   const handleInstall = async () => {
     const result = await install();
@@ -35,9 +37,9 @@ export function InstallPrompt({ onDismiss }: InstallPromptProps) {
             </div>
             
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold mb-1">Install Gatherly</h3>
+              <h3 className="font-semibold mb-1">{t('pwa.install.title')}</h3>
               <p className="text-sm text-muted-foreground">
-                Add to your home screen for the best experience
+                {t('pwa.install.description')}
               </p>
             </div>
 
@@ -57,14 +59,14 @@ export function InstallPrompt({ onDismiss }: InstallPromptProps) {
               className="flex-1"
               onClick={onDismiss}
             >
-              Not Now
+              {t('pwa.install.not_now')}
             </Button>
             <Button
               className="flex-1"
               onClick={handleInstall}
             >
               <Download className="h-4 w-4 mr-2" />
-              Install
+              {t('pwa.install.install')}
             </Button>
           </div>
         </div>
@@ -75,6 +77,7 @@ export function InstallPrompt({ onDismiss }: InstallPromptProps) {
 
 // iOS specific install instructions
 export function IOSInstallInstructions() {
+  const { t } = useTranslation();
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const isInStandaloneMode = (window.navigator as any).standalone === true;
 
@@ -83,16 +86,16 @@ export function IOSInstallInstructions() {
   return (
     <div className="bg-muted/50 rounded-xl p-4 text-center">
       <p className="text-sm text-muted-foreground mb-2">
-        To install on iOS:
+        {t('pwa.ios.instructions')}
       </p>
       <div className="flex items-center justify-center gap-2 text-sm">
-        <span>Tap</span>
+        <span>{t('pwa.ios.tap')}</span>
         <span className="inline-flex items-center justify-center h-6 w-6 bg-primary/10 rounded">
           <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 2L12 14M12 2L8 6M12 2L16 6M4 12V20H20V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
           </svg>
         </span>
-        <span>then "Add to Home Screen"</span>
+        <span>{t('pwa.ios.then')}</span>
       </div>
     </div>
   );

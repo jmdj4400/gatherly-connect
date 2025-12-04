@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { BoostedBadge } from '@/components/events/BoostedBadge';
 import { format, isToday, isTomorrow } from 'date-fns';
+import { useTranslation } from '@/lib/i18n';
 
 interface EventCardProps {
   event: {
@@ -25,11 +26,12 @@ interface EventCardProps {
 }
 
 export function EventCard({ event, participantCount = 0, variant = 'default', isBoosted, boostLevel }: EventCardProps) {
+  const { t } = useTranslation();
   const eventDate = new Date(event.starts_at);
   
   const getDateLabel = () => {
-    if (isToday(eventDate)) return 'Today';
-    if (isTomorrow(eventDate)) return 'Tomorrow';
+    if (isToday(eventDate)) return t('event.today');
+    if (isTomorrow(eventDate)) return t('event.tomorrow');
     return format(eventDate, 'EEE, MMM d');
   };
 
@@ -110,7 +112,7 @@ export function EventCard({ event, participantCount = 0, variant = 'default', is
             </div>
             {event.allow_come_alone && (
               <Badge variant="default" className="shadow-sm text-xs">
-                ✨ Join Alone
+                {t('event.join_alone_badge')}
               </Badge>
             )}
           </div>

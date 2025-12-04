@@ -5,9 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useIsPremium } from "@/hooks/useSubscription";
 import { isFeatureEnabled } from "@/lib/feature-flags";
+import { useTranslation } from "@/lib/i18n";
 
 export function UpgradeCTA() {
   const { isPremium, plan, isTrialing, trialEndsAt } = useIsPremium();
+  const { t } = useTranslation();
 
   // Don't show if premium features are disabled
   if (!isFeatureEnabled("PREMIUM_FEATURES")) {
@@ -26,20 +28,20 @@ export function UpgradeCTA() {
               </div>
               <div>
                 <p className="font-medium flex items-center gap-2">
-                  {plan === "plus" ? "Plus" : "Basic"} Member
+                  {plan === "plus" ? "Plus" : "Basic"} {t('premium.member')}
                   {isTrialing && (
-                    <Badge variant="secondary" className="text-xs">Trial</Badge>
+                    <Badge variant="secondary" className="text-xs">{t('premium.trial_badge')}</Badge>
                   )}
                 </p>
                 {isTrialing && trialEndsAt && (
                   <p className="text-xs text-muted-foreground">
-                    Trial ends {trialEndsAt.toLocaleDateString()}
+                    {t('premium.trial_ends_date')} {trialEndsAt.toLocaleDateString()}
                   </p>
                 )}
               </div>
             </div>
             <Link to="/premium">
-              <Button variant="ghost" size="sm">Manage</Button>
+              <Button variant="ghost" size="sm">{t('premium.manage')}</Button>
             </Link>
           </div>
         </CardContent>
@@ -57,15 +59,15 @@ export function UpgradeCTA() {
               <Sparkles className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <p className="font-medium">Upgrade to Premium</p>
+              <p className="font-medium">{t('premium.upgrade')}</p>
               <p className="text-xs text-muted-foreground">
-                Get priority matching & see who joined
+                {t('premium.upgrade_desc')}
               </p>
             </div>
           </div>
           <Link to="/premium">
             <Button size="sm">
-              Try Free
+              {t('premium.try_free')}
             </Button>
           </Link>
         </div>

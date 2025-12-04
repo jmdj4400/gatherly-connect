@@ -5,6 +5,7 @@ import { GlassCard } from '@/components/ui/glass-card';
 import { format } from 'date-fns';
 import { RecommendedEvent } from '@/hooks/useRecommendedEvents';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n';
 
 interface RecommendedEventCardProps {
   event: RecommendedEvent;
@@ -13,6 +14,7 @@ interface RecommendedEventCardProps {
 }
 
 export function RecommendedEventCard({ event, onClick, className }: RecommendedEventCardProps) {
+  const { t } = useTranslation();
   const eventDate = new Date(event.starts_at);
 
   const getScoreColor = (score: number) => {
@@ -50,7 +52,7 @@ export function RecommendedEventCard({ event, onClick, className }: RecommendedE
               )}
             >
               <Sparkles className="h-3 w-3 mr-1" />
-              {event.recommendation_score}% match
+              {event.recommendation_score}% {t('event.match')}
             </Badge>
           </div>
 
@@ -82,7 +84,7 @@ export function RecommendedEventCard({ event, onClick, className }: RecommendedE
 
           {/* Why Recommended */}
           <div className="pt-3 border-t border-border/50">
-            <p className="text-xs text-muted-foreground mb-2 font-medium">Why recommended:</p>
+            <p className="text-xs text-muted-foreground mb-2 font-medium">{t('event.why_recommended')}</p>
             <div className="flex flex-wrap gap-1.5">
               {event.recommendation_reasons.map((reason, idx) => (
                 <Badge 
