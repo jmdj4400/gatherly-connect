@@ -27,6 +27,7 @@ import CommunityFeed from "./pages/CommunityFeed";
 import OrganizerGroupsDashboard from "./pages/OrganizerGroupsDashboard";
 import OrganizerWidgets from "./pages/OrganizerWidgets";
 import Premium from "./pages/Premium";
+import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -90,6 +91,7 @@ const App = () => {
                 <Route path="/c/:handle" element={<CommunityLanding />} />
                 <Route path="/c/:handle/feed" element={<CommunityFeed />} />
                 <Route path="/premium" element={<Premium />} />
+                <Route path="/privacy" element={<Privacy />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
