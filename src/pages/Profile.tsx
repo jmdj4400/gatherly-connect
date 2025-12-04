@@ -17,6 +17,7 @@ import { StreakDisplay } from '@/components/engagement/StreakDisplay';
 import { BadgeGrid } from '@/components/engagement/BadgeGrid';
 import { UpgradeCTA } from '@/components/profile/UpgradeCTA';
 import { GDPRSettings } from '@/components/profile/GDPRSettings';
+import { useTranslation } from '@/lib/i18n';
 
 const INTEREST_EMOJIS: Record<string, string> = {
   music: '🎵',
@@ -33,19 +34,20 @@ const INTEREST_EMOJIS: Record<string, string> = {
   nightlife: '🍹',
 };
 
-const ENERGY_LABELS: Record<number, { label: string; emoji: string }> = {
-  1: { label: 'Quiet Observer', emoji: '🌙' },
-  2: { label: 'Selective Socializer', emoji: '🌤️' },
-  3: { label: 'Balanced', emoji: '☀️' },
-  4: { label: 'Social Butterfly', emoji: '🦋' },
-  5: { label: 'Life of the Party', emoji: '🎉' },
-};
-
 export default function Profile() {
   const navigate = useNavigate();
   const { user, profile, signOut, loading } = useAuth();
   const { toast } = useToast();
   const { stats: engagementStats, loading: engagementLoading } = useEngagement();
+  const { t } = useTranslation();
+
+  const ENERGY_LABELS: Record<number, { label: string; emoji: string }> = {
+    1: { label: t('profile.energy.quiet'), emoji: '🌙' },
+    2: { label: t('profile.energy.selective'), emoji: '🌤️' },
+    3: { label: t('profile.energy.balanced'), emoji: '☀️' },
+    4: { label: t('profile.energy.butterfly'), emoji: '🦋' },
+    5: { label: t('profile.energy.party'), emoji: '🎉' },
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -90,7 +92,7 @@ export default function Profile() {
   };
 
   if (loading) {
-    return <PageLoader message="Loading profile..." />;
+    return <PageLoader message={t('common.loading')} />;
   }
 
   if (!user || !profile) {
@@ -103,16 +105,16 @@ export default function Profile() {
             </div>
           </FadeIn>
           <FadeIn delay={0.1}>
-            <h2 className="text-2xl font-bold mb-2 tracking-tight">Sign in to view your profile</h2>
+            <h2 className="text-2xl font-bold mb-2 tracking-tight">{t('profile.sign_in_to_view')}</h2>
           </FadeIn>
           <FadeIn delay={0.2}>
             <p className="text-muted-foreground mb-8 max-w-sm">
-              Create an account or sign in to get started with Gatherly
+              {t('profile.get_started')}
             </p>
           </FadeIn>
           <FadeIn delay={0.3}>
             <Button onClick={() => navigate('/auth')} size="lg" variant="gradient">
-              Sign In
+              {t('profile.sign_in')}
             </Button>
           </FadeIn>
         </div>
@@ -163,7 +165,7 @@ export default function Profile() {
 
             {profile.verified && (
               <Badge className="mt-3 bg-success/10 text-success border-success/20">
-                ✓ Verified
+                ✓ {t('profile.verified')}
               </Badge>
             )}
           </StaggerItem>
@@ -179,9 +181,9 @@ export default function Profile() {
           <StaggerItem>
             <div className="grid grid-cols-3 gap-3 mt-5">
               {[
-                { value: String(engagementStats?.attendance_count || 0), label: 'Events' },
-                { value: String(engagementStats?.badges?.length || 0), label: 'Badges' },
-                { value: String(engagementStats?.streaks?.[0]?.current_streak || 0), label: 'Streak' },
+                { value: String(engagementStats?.attendance_count || 0), label: t('profile.events') },
+                { value: String(engagementStats?.badges?.length || 0), label: t('profile.badges') },
+                { value: String(engagementStats?.streaks?.[0]?.current_streak || 0), label: t('profile.streak') },
               ].map((stat) => (
                 <GlassCard key={stat.label} variant="subtle" className="p-4 text-center">
                   <div className="text-2xl font-bold text-primary">{stat.value}</div>
@@ -216,7 +218,7 @@ export default function Profile() {
                   <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
                     <Award className="h-4 w-4 text-primary" />
                   </div>
-                  <span className="font-semibold">Badges</span>
+                  <span className="font-semibold">{t('profile.badges')}</span>
                 </div>
                 <BadgeGrid badges={engagementStats.badges} showAll />
               </GlassCard>
@@ -232,7 +234,7 @@ export default function Profile() {
                 </div>
                 <div className="flex-1">
                   <div className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-0.5">
-                    Social Energy
+                    {t('profile.social_energy')}
                   </div>
                   <div className="font-semibold text-lg">{energyInfo.label}</div>
                 </div>
@@ -250,7 +252,7 @@ export default function Profile() {
                 <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
                   <Heart className="h-4 w-4 text-primary" />
                 </div>
-                <span className="font-semibold">Interests</span>
+                <span className="font-semibold">{t('profile.interests')}</span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {profile.interests && profile.interests.length > 0 ? (
@@ -260,7 +262,7 @@ export default function Profile() {
                     </Badge>
                   ))
                 ) : (
-                  <span className="text-sm text-muted-foreground">No interests added yet</span>
+                  <span className="text-sm text-muted-foreground">{t('profile.no_interests')}</span>
                 )}
               </div>
             </GlassCard>
@@ -277,13 +279,13 @@ export default function Profile() {
           <StaggerItem>
             <div className="mt-6 space-y-2">
               {[
-                { icon: Bell, label: 'Test Notifikation', onClick: handleTestNotification },
-                { icon: Calendar, label: 'Organizer Events', onClick: () => navigate('/organizer/events') },
-                { icon: Users, label: 'Team Management', onClick: () => navigate('/organizer/team') },
-                { icon: Cog, label: 'Community Settings', onClick: () => navigate('/organizer/settings') },
-                { icon: Edit2, label: 'Edit Profile', onClick: () => navigate('/onboarding') },
-                { icon: Building2, label: 'Venue Panel', onClick: () => navigate('/venue') },
-                { icon: Shield, label: 'Report Center', onClick: () => navigate('/admin/reports') },
+                { icon: Bell, label: t('profile.test_notification'), onClick: handleTestNotification },
+                { icon: Calendar, label: t('profile.organizer_events'), onClick: () => navigate('/organizer/events') },
+                { icon: Users, label: t('profile.team_management'), onClick: () => navigate('/organizer/team') },
+                { icon: Cog, label: t('profile.community_settings'), onClick: () => navigate('/organizer/settings') },
+                { icon: Edit2, label: t('profile.edit_profile'), onClick: () => navigate('/onboarding') },
+                { icon: Building2, label: t('profile.venue_panel'), onClick: () => navigate('/venue') },
+                { icon: Shield, label: t('profile.report_center'), onClick: () => navigate('/admin/reports') },
               ].map((action) => (
                 <motion.div
                   key={action.label}
@@ -317,7 +319,7 @@ export default function Profile() {
                     <div className="h-10 w-10 rounded-xl bg-destructive/10 flex items-center justify-center">
                       <LogOut className="h-5 w-5 text-destructive" />
                     </div>
-                    <span className="flex-1 font-medium text-destructive">Sign Out</span>
+                    <span className="flex-1 font-medium text-destructive">{t('profile.sign_out')}</span>
                     <ChevronRight className="h-5 w-5 text-destructive/50" />
                   </div>
                 </GlassCard>

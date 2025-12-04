@@ -3,17 +3,19 @@ import { motion } from 'framer-motion';
 import { Home, Compass, Users, MessageCircle, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { hapticFeedback } from '@/lib/capacitor';
-
-const navItems = [
-  { href: '/', icon: Home, label: 'Home' },
-  { href: '/explore', icon: Compass, label: 'Explore' },
-  { href: '/groups', icon: Users, label: 'Groups' },
-  { href: '/chat', icon: MessageCircle, label: 'Chat' },
-  { href: '/profile', icon: User, label: 'Profile' },
-];
+import { useTranslation } from '@/lib/i18n';
 
 export function BottomNav() {
   const location = useLocation();
+  const { t } = useTranslation();
+
+  const navItems = [
+    { href: '/', icon: Home, label: t('nav.home') },
+    { href: '/explore', icon: Compass, label: t('nav.explore') },
+    { href: '/groups', icon: Users, label: t('nav.groups') },
+    { href: '/chat', icon: MessageCircle, label: t('nav.chat') },
+    { href: '/profile', icon: User, label: t('nav.profile') },
+  ];
 
   const handleNavClick = async () => {
     await hapticFeedback.light();

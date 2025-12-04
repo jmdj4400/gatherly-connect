@@ -15,18 +15,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
 import { useRecommendedEvents } from '@/hooks/useRecommendedEvents';
-
-const CATEGORIES = [
-  { id: 'all', label: 'All', emoji: '✨' },
-  { id: 'music', label: 'Music', emoji: '🎵' },
-  { id: 'food', label: 'Food', emoji: '🍕' },
-  { id: 'sports', label: 'Sports', emoji: '⚽' },
-  { id: 'art', label: 'Art', emoji: '🎨' },
-  { id: 'tech', label: 'Tech', emoji: '💻' },
-  { id: 'outdoors', label: 'Outdoors', emoji: '🏕️' },
-  { id: 'fitness', label: 'Fitness', emoji: '💪' },
-  { id: 'nightlife', label: 'Nightlife', emoji: '🍹' },
-];
+import { useTranslation } from '@/lib/i18n';
 
 interface Event {
   id: string;
@@ -43,12 +32,25 @@ interface Event {
 export default function Explore() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
+  const { t } = useTranslation();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [showForYou, setShowForYou] = useState(true);
+
+  const CATEGORIES = [
+    { id: 'all', label: t('explore.categories.all'), emoji: '✨' },
+    { id: 'music', label: t('explore.categories.music'), emoji: '🎵' },
+    { id: 'food', label: t('explore.categories.food'), emoji: '🍕' },
+    { id: 'sports', label: t('explore.categories.sports'), emoji: '⚽' },
+    { id: 'art', label: t('explore.categories.art'), emoji: '🎨' },
+    { id: 'tech', label: t('explore.categories.tech'), emoji: '💻' },
+    { id: 'outdoors', label: t('explore.categories.outdoors'), emoji: '🏕️' },
+    { id: 'fitness', label: t('explore.categories.fitness'), emoji: '💪' },
+    { id: 'nightlife', label: t('explore.categories.nightlife'), emoji: '🍹' },
+  ];
 
   const { 
     recommendations, 
@@ -105,8 +107,8 @@ export default function Explore() {
                 <MapPin className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="font-semibold">{profile?.city || 'All Cities'}</p>
-                <p className="text-xs text-muted-foreground">Events nearby</p>
+                <p className="font-semibold">{profile?.city || t('explore.all_cities')}</p>
+                <p className="text-xs text-muted-foreground">{t('explore.events_nearby')}</p>
               </div>
             </div>
             
@@ -135,7 +137,7 @@ export default function Explore() {
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             <Input
-              placeholder="Search events, venues..."
+              placeholder={t('explore.search_placeholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-12 pr-10 h-12 bg-muted/50"
@@ -191,8 +193,8 @@ export default function Explore() {
                   <Sparkles className="h-5 w-5 text-primary-foreground" />
                 </div>
                 <div>
-                  <h2 className="font-semibold">For You</h2>
-                  <p className="text-xs text-muted-foreground">Personalized recommendations</p>
+                  <h2 className="font-semibold">{t('explore.for_you')}</h2>
+                  <p className="text-xs text-muted-foreground">{t('explore.personalized')}</p>
                 </div>
               </div>
               <Button
@@ -260,10 +262,10 @@ export default function Explore() {
             >
               <EmptyState
                 icon={Calendar}
-                title="No events found"
-                description="Try adjusting your filters or check back later for new events"
+                title={t('explore.no_events')}
+                description={t('explore.no_events_desc')}
                 action={{
-                  label: 'Clear Filters',
+                  label: t('explore.clear_filters'),
                   onClick: () => {
                     setSelectedCategory('all');
                     setSearchQuery('');
@@ -279,7 +281,7 @@ export default function Explore() {
               exit={{ opacity: 0 }}
             >
               <p className="text-sm text-muted-foreground mb-4 font-medium">
-                {filteredEvents.length} event{filteredEvents.length !== 1 ? 's' : ''} found
+                {filteredEvents.length} {filteredEvents.length !== 1 ? t('explore.events_found') : t('explore.event_found')}
               </p>
               <StaggerContainer className="grid gap-4">
                 {filteredEvents.map((event) => (
