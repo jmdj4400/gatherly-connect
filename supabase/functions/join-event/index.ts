@@ -13,6 +13,31 @@ const ErrorCodes = {
   UNKNOWN: 'E.UNKNOWN',
 } as const;
 
+// Input validation
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function isValidUUID(value: unknown): value is string {
+  return typeof value === 'string' && UUID_REGEX.test(value);
+}
+
+interface JoinEventInput {
+  event_id: string;
+}
+
+function validateJoinEventInput(input: unknown): { success: boolean; data?: JoinEventInput; error?: string } {
+  if (typeof input !== 'object' || input === null) {
+    return { success: false, error: 'Request body must be a JSON object' };
+  }
+  
+  const data = input as Record<string, unknown>;
+  
+  if (!isValidUUID(data.event_id)) {
+    return { success: false, error: 'event_id must be a valid UUID' };
+  }
+  
+  return { success: true, data: { event_id: data.event_id as string } };
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -113,11 +138,20 @@ serve(async (req) => {
   }
 
   try {
-    const { event_id } = await req.json();
-    
-    if (!event_id) {
-      return errorResponse(ErrorCodes.VALIDATION, 'event_id is required');
+    // Parse and validate input
+    let rawInput: unknown;
+    try {
+      rawInput = await req.json();
+    } catch {
+      return errorResponse(ErrorCodes.VALIDATION, 'Invalid JSON in request body');
     }
+    
+    const validation = validateJoinEventInput(rawInput);
+    if (!validation.success || !validation.data) {
+      return errorResponse(ErrorCodes.VALIDATION, validation.error || 'Invalid input');
+    }
+    
+    const { event_id } = validation.data;
 
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {

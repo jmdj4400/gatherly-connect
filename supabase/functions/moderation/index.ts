@@ -6,6 +6,51 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Input validation
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const MAX_CONTENT_LENGTH = 5000;
+
+function isValidUUID(value: unknown): value is string {
+  return typeof value === 'string' && UUID_REGEX.test(value);
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+interface ModerationInput {
+  content: string;
+  group_id: string;
+}
+
+function validateModerationInput(input: unknown): { success: boolean; data?: ModerationInput; error?: string } {
+  if (typeof input !== 'object' || input === null) {
+    return { success: false, error: 'Request body must be a JSON object' };
+  }
+  
+  const data = input as Record<string, unknown>;
+  
+  if (!isNonEmptyString(data.content)) {
+    return { success: false, error: 'content must be a non-empty string' };
+  }
+  
+  if ((data.content as string).length > MAX_CONTENT_LENGTH) {
+    return { success: false, error: `content must not exceed ${MAX_CONTENT_LENGTH} characters` };
+  }
+  
+  if (!isValidUUID(data.group_id)) {
+    return { success: false, error: 'group_id must be a valid UUID' };
+  }
+  
+  return { 
+    success: true, 
+    data: { 
+      content: (data.content as string).trim(), 
+      group_id: data.group_id as string 
+    } 
+  };
+}
+
 // Fallback profanity wordlist when AI moderation fails
 const PROFANITY_WORDLIST = [
   'fuck', 'shit', 'ass', 'bitch', 'damn', 'crap', 'piss', 'dick', 'cock', 
@@ -60,14 +105,25 @@ serve(async (req) => {
 
     // Moderate a message before sending
     if (req.method === 'POST' && action === 'check') {
-      const { content, group_id } = await req.json();
-
-      if (!content || !group_id) {
-        return new Response(JSON.stringify({ error: 'content and group_id required' }), {
+      let rawInput: unknown;
+      try {
+        rawInput = await req.json();
+      } catch {
+        return new Response(JSON.stringify({ error: 'Invalid JSON in request body' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
+      
+      const validation = validateModerationInput(rawInput);
+      if (!validation.success || !validation.data) {
+        return new Response(JSON.stringify({ error: validation.error || 'Invalid input' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      const { content, group_id } = validation.data;
 
       // Check if group is frozen
       const { data: group } = await supabaseAdmin
@@ -250,7 +306,25 @@ serve(async (req) => {
 
     // Send message with moderation
     if (req.method === 'POST' && action === 'send') {
-      const { content, group_id } = await req.json();
+      let rawInput: unknown;
+      try {
+        rawInput = await req.json();
+      } catch {
+        return new Response(JSON.stringify({ error: 'Invalid JSON in request body' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      const validation = validateModerationInput(rawInput);
+      if (!validation.success || !validation.data) {
+        return new Response(JSON.stringify({ error: validation.error || 'Invalid input' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      
+      const { content, group_id } = validation.data;
 
       // First check moderation
       const checkResult = await fetch(`${supabaseUrl}/functions/v1/moderation?action=check`, {
