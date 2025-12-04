@@ -13,32 +13,10 @@ import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { recomputeEmbedding } from '@/hooks/useVibeScore';
+import { useTranslation } from '@/lib/i18n';
 
 const STEPS = ['interests', 'energy', 'location', 'notifications'] as const;
 type Step = typeof STEPS[number];
-
-const stepInfo = {
-  interests: {
-    title: 'What are you into?',
-    subtitle: 'Pick at least 2 interests so we can match you better',
-    icon: '🎯',
-  },
-  energy: {
-    title: 'Your social style',
-    subtitle: 'This helps us find groups that match your vibe',
-    icon: '⚡',
-  },
-  location: {
-    title: 'Where are you?',
-    subtitle: "We'll show you events happening nearby",
-    icon: '📍',
-  },
-  notifications: {
-    title: 'Stay connected',
-    subtitle: 'Get notified about your groups and events',
-    icon: '🔔',
-  },
-};
 
 const slideVariants = {
   enter: (direction: number) => ({
@@ -59,6 +37,7 @@ export default function Onboarding() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, refreshProfile } = useAuth();
+  const { t } = useTranslation();
   
   const [currentStep, setCurrentStep] = useState<Step>('interests');
   const [direction, setDirection] = useState(0);
@@ -70,6 +49,30 @@ export default function Onboarding() {
 
   const stepIndex = STEPS.indexOf(currentStep);
   const progress = ((stepIndex + 1) / STEPS.length) * 100;
+
+  const stepInfo = {
+    interests: {
+      title: t('onboarding.interests.title'),
+      subtitle: t('onboarding.interests.subtitle'),
+      icon: '🎯',
+    },
+    energy: {
+      title: t('onboarding.energy.title'),
+      subtitle: t('onboarding.energy.subtitle'),
+      icon: '⚡',
+    },
+    location: {
+      title: t('onboarding.location.title'),
+      subtitle: t('onboarding.location.subtitle'),
+      icon: '📍',
+    },
+    notifications: {
+      title: t('onboarding.notifications.title'),
+      subtitle: t('onboarding.notifications.subtitle'),
+      icon: '🔔',
+    },
+  };
+
   const info = stepInfo[currentStep];
 
   const canProceed = () => {
@@ -91,8 +94,8 @@ export default function Onboarding() {
     if (currentStep === 'location') {
       if (!user?.id) {
         toast({
-          title: "Not signed in",
-          description: "Please sign in to complete setup",
+          title: t('onboarding.not_signed_in'),
+          description: t('onboarding.sign_in_to_complete'),
           variant: "destructive"
         });
         navigate('/auth');
@@ -121,7 +124,7 @@ export default function Onboarding() {
         setCurrentStep('notifications');
       } catch (error: any) {
         toast({
-          title: "Error saving profile",
+          title: t('onboarding.error_saving'),
           description: error.message,
           variant: "destructive"
         });
@@ -130,8 +133,8 @@ export default function Onboarding() {
       }
     } else if (currentStep === 'notifications') {
       toast({
-        title: "You're all set! 🎉",
-        description: "Your profile is ready. Start exploring events!"
+        title: t('onboarding.all_set'),
+        description: t('onboarding.profile_ready')
       });
       navigate('/');
     } else {
@@ -261,16 +264,16 @@ export default function Onboarding() {
               {saving ? (
                 <div className="flex items-center gap-2">
                   <LoadingSpinner size="sm" />
-                  <span>Saving...</span>
+                  <span>{t('onboarding.saving')}</span>
                 </div>
               ) : currentStep === 'location' ? (
                 <>
                   <Bell className="mr-2 h-5 w-5" />
-                  Continue to Notifications
+                  {t('onboarding.continue_notifications')}
                 </>
               ) : (
                 <>
-                  Continue
+                  {t('onboarding.continue')}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </>
               )}
@@ -286,7 +289,7 @@ export default function Onboarding() {
               onClick={handleNext}
               disabled={saving}
             >
-              Skip for now
+              {t('onboarding.skip')}
             </motion.button>
           )}
         </div>

@@ -9,10 +9,12 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth';
 import { format, differenceInMinutes } from 'date-fns';
+import { da, enUS } from 'date-fns/locale';
 import { useVibeScore } from '@/hooks/useVibeScore';
 import { VibeScoreBadge } from '@/components/ui/vibe-score-badge';
 import { useEngagement } from '@/hooks/useEngagement';
 import { FreezeStatus, FreezeCountdown, useFreeze } from '@/components/events/FreezeStatus';
+import { useTranslation } from '@/lib/i18n';
 
 interface Event {
   id: string;
@@ -45,6 +47,7 @@ export default function EventDetail() {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { user, profile } = useAuth();
+  const { t, language } = useTranslation();
   
   const [event, setEvent] = useState<Event | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
@@ -60,6 +63,7 @@ export default function EventDetail() {
   const { isFrozen } = useFreeze(event?.starts_at || '', event?.freeze_hours_before || 2);
 
   const autoJoin = searchParams.get('autojoin') === 'true';
+  const dateLocale = language === 'da' ? da : enUS;
 
   useEffect(() => {
     if (id) {
@@ -169,18 +173,18 @@ export default function EventDetail() {
       
       if (result.status === 'assigned') {
         toast({
-          title: "You're matched! 🎉",
-          description: result.message || "Your group is ready. Check your groups page!"
+          title: t('event.matched'),
+          description: result.message || t('event.matched_desc')
         });
       } else if (result.status === 'forming') {
         toast({
-          title: "Group forming!",
-          description: result.message || "We're building your group. We'll notify you when it's ready!"
+          title: t('event.group_forming'),
+          description: result.message || t('event.group_forming_desc')
         });
       } else {
         toast({
-          title: "You're in! 🎉",
-          description: result.message || "We'll match you with your group soon."
+          title: t('event.youre_in'),
+          description: result.message || t('event.youre_in_desc')
         });
       }
 
@@ -188,7 +192,7 @@ export default function EventDetail() {
       await fetchEventDetails();
     } catch (error: any) {
       toast({
-        title: "Couldn't join event",
+        title: t('event.couldnt_join'),
         description: error.message,
         variant: "destructive"
       });
@@ -211,14 +215,14 @@ export default function EventDetail() {
 
       setIsJoined(false);
       toast({
-        title: "You've left the event",
-        description: "You can rejoin anytime before it starts."
+        title: t('event.left'),
+        description: t('event.left_desc')
       });
 
       await fetchEventDetails();
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: t('common.error'),
         description: error.message,
         variant: "destructive"
       });
@@ -237,19 +241,19 @@ export default function EventDetail() {
         
         if (result.new_badges && result.new_badges.length > 0) {
           toast({
-            title: `Badge earned! ${result.new_badges[0].icon}`,
-            description: `You earned the ${result.new_badges[0].name} badge!`
+            title: `${t('event.badge_earned')} ${result.new_badges[0].icon}`,
+            description: `${t('event.badge_earned_desc')} ${result.new_badges[0].name}!`
           });
         } else {
           toast({
-            title: "Checked in! ✅",
-            description: "Your attendance has been recorded."
+            title: t('event.checked_in_success'),
+            description: t('event.checked_in_desc')
           });
         }
       }
     } catch (error: any) {
       toast({
-        title: "Check-in failed",
+        title: t('event.checkin_failed'),
         description: error.message,
         variant: "destructive"
       });
@@ -269,8 +273,8 @@ export default function EventDetail() {
   if (!event) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
-        <h2 className="text-xl font-semibold mb-2">Event not found</h2>
-        <Button onClick={() => navigate('/explore')}>Browse Events</Button>
+        <h2 className="text-xl font-semibold mb-2">{t('event.not_found')}</h2>
+        <Button onClick={() => navigate('/explore')}>{t('event.browse')}</Button>
       </div>
     );
   }
@@ -342,12 +346,12 @@ export default function EventDetail() {
           <div className="space-y-3 text-muted-foreground">
             <div className="flex items-center gap-3">
               <Calendar className="h-5 w-5 text-primary" />
-              <span>{format(eventDate, 'EEEE, MMMM d, yyyy')}</span>
+              <span>{format(eventDate, 'EEEE, MMMM d, yyyy', { locale: dateLocale })}</span>
             </div>
             
             <div className="flex items-center gap-3">
               <Clock className="h-5 w-5 text-primary" />
-              <span>{format(eventDate, 'h:mm a')}</span>
+              <span>{format(eventDate, 'HH:mm', { locale: dateLocale })}</span>
             </div>
             
             {(event.venue_name || event.address) && (
@@ -366,7 +370,7 @@ export default function EventDetail() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <h2 className="text-lg font-semibold mb-2">About</h2>
+            <h2 className="text-lg font-semibold mb-2">{t('event.about')}</h2>
             <p className="text-muted-foreground leading-relaxed">{event.description}</p>
           </motion.div>
         )}
@@ -378,8 +382,8 @@ export default function EventDetail() {
           transition={{ delay: 0.2 }}
         >
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold">Going Alone</h2>
-            <span className="text-sm text-muted-foreground">{participants.length} joined</span>
+            <h2 className="text-lg font-semibold">{t('event.going_alone')}</h2>
+            <span className="text-sm text-muted-foreground">{participants.length} {t('event.joined')}</span>
           </div>
           
           <div className="flex items-center gap-2">
@@ -395,7 +399,7 @@ export default function EventDetail() {
             </div>
             {participants.length > 5 && (
               <span className="text-sm text-muted-foreground ml-2">
-                +{participants.length - 5} more
+                +{participants.length - 5} {t('event.more')}
               </span>
             )}
           </div>
@@ -424,7 +428,7 @@ export default function EventDetail() {
                   disabled={checkingIn}
                 >
                   <CheckCircle className="mr-2 h-5 w-5" />
-                  {checkingIn ? 'Checking in...' : 'Check In'}
+                  {checkingIn ? t('event.checking_in') : t('event.check_in')}
                 </Button>
               ) : hasCheckedIn ? (
                 <Button
@@ -433,7 +437,7 @@ export default function EventDetail() {
                   disabled
                 >
                   <CheckCircle className="mr-2 h-5 w-5" />
-                  Checked In ✓
+                  {t('event.checked_in')}
                 </Button>
               ) : !isFrozen ? (
                 <Button
@@ -441,7 +445,7 @@ export default function EventDetail() {
                   className="flex-1 h-14"
                   onClick={handleLeave}
                 >
-                  Leave Event
+                  {t('event.leave')}
                 </Button>
               ) : (
                 <Button
@@ -450,7 +454,7 @@ export default function EventDetail() {
                   disabled
                 >
                   <Snowflake className="mr-2 h-4 w-4" />
-                  Groups Locked
+                  {t('event.groups_locked')}
                 </Button>
               )}
               <Button
@@ -458,7 +462,7 @@ export default function EventDetail() {
                 onClick={() => navigate('/groups')}
               >
                 <Users className="mr-2 h-5 w-5" />
-                View My Group
+                {t('event.view_group')}
               </Button>
             </div>
           ) : isFrozen ? (
@@ -468,7 +472,7 @@ export default function EventDetail() {
               variant="secondary"
             >
               <Snowflake className="mr-2 h-5 w-5" />
-              Groups Finalized - Join Closed
+              {t('event.groups_finalized')}
             </Button>
           ) : (
             <Button
@@ -477,11 +481,11 @@ export default function EventDetail() {
               disabled={joining}
             >
               {joining ? (
-                'Joining...'
+                t('event.joining')
               ) : (
                 <>
                   <Users className="mr-2 h-5 w-5" />
-                  Join Alone
+                  {t('event.join_alone')}
                 </>
               )}
             </Button>

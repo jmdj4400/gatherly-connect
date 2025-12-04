@@ -15,6 +15,8 @@ import { BestMatchTag, VibeScoreBadge } from '@/components/ui/vibe-score-badge';
 import { useKeyboardAware } from '@/hooks/useKeyboardAware';
 import { hapticFeedback } from '@/lib/capacitor';
 import { format, formatDistanceToNow } from 'date-fns';
+import { da, enUS } from 'date-fns/locale';
+import { useTranslation } from '@/lib/i18n';
 
 interface GroupInfo {
   id: string;
@@ -36,6 +38,7 @@ export default function GroupChat() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const { toast } = useToast();
+  const { t, language } = useTranslation();
   
   const [newMessage, setNewMessage] = useState('');
   const [groupInfo, setGroupInfo] = useState<GroupInfo | null>(null);
@@ -46,6 +49,7 @@ export default function GroupChat() {
   const { keyboardHeight, isKeyboardVisible, scrollToInput } = useKeyboardAware();
 
   const { bestMatch } = useCompatibilityMatrix(eventId || undefined);
+  const dateLocale = language === 'da' ? da : enUS;
 
   const {
     messages,
@@ -159,7 +163,7 @@ export default function GroupChat() {
       setNewMessage(messageContent);
       await hapticFeedback.heavy();
       toast({
-        title: 'Message not sent',
+        title: t('chat.message_not_sent'),
         description: result.error,
         variant: 'destructive',
       });
@@ -204,18 +208,18 @@ export default function GroupChat() {
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <h1 className="font-semibold line-clamp-1">
-                {groupInfo?.event?.title || 'Group Chat'}
+                {groupInfo?.event?.title || t('chat.group_chat')}
               </h1>
               {(isFrozen || groupInfo?.frozen) && (
                 <Badge variant="secondary" className="gap-1">
                   <Snowflake className="h-3 w-3" />
-                  Frozen
+                  {t('chat.frozen')}
                 </Badge>
               )}
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Users className="h-3 w-3" />
-              <span>{groupInfo?.members.length || 0} members</span>
+              <span>{groupInfo?.members.length || 0} {t('chat.members')}</span>
               {isConnected ? (
                 <Wifi className="h-3 w-3 text-green-500 ml-2" />
               ) : isOffline ? (
@@ -251,9 +255,9 @@ export default function GroupChat() {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
               <span className="text-3xl">👋</span>
             </div>
-            <h3 className="font-semibold mb-1">Start the conversation!</h3>
+            <h3 className="font-semibold mb-1">{t('chat.start_conversation')}</h3>
             <p className="text-sm text-muted-foreground">
-              Say hi to your group members
+              {t('chat.say_hi')}
             </p>
           </div>
         ) : (
@@ -300,7 +304,7 @@ export default function GroupChat() {
                       </div>
                       <div className={`flex items-center gap-1 mt-1 ${isOwn ? 'justify-end' : ''}`}>
                         <span className="text-xs text-muted-foreground">
-                          {format(new Date(message.created_at), 'h:mm a')}
+                          {format(new Date(message.created_at), 'HH:mm', { locale: dateLocale })}
                         </span>
                         {isOwn && readStatus && (
                           <span className="ml-1">
@@ -350,8 +354,8 @@ export default function GroupChat() {
               </div>
               <span className="text-xs text-muted-foreground">
                 {typingUsers.length === 1
-                  ? `${typingUsers[0].display_name} is typing...`
-                  : `${typingUsers.length} people are typing...`}
+                  ? `${typingUsers[0].display_name} ${t('chat.is_typing')}`
+                  : `${typingUsers.length} ${t('chat.people_typing')}`}
               </span>
             </motion.div>
           )}
@@ -370,7 +374,7 @@ export default function GroupChat() {
           <div className="flex items-center justify-center gap-2 text-amber-600 bg-amber-50 dark:bg-amber-900/20 rounded-lg py-2 px-4 mb-3">
             <VolumeX className="h-4 w-4" />
             <span className="text-sm">
-              You are muted for {formatDistanceToNow(muteExpiresAt)}
+              {t('chat.muted_for')} {formatDistanceToNow(muteExpiresAt, { locale: dateLocale })}
             </span>
           </div>
         )}
@@ -378,13 +382,13 @@ export default function GroupChat() {
         {(isFrozen || groupInfo?.frozen) ? (
           <div className="flex items-center justify-center gap-2 text-muted-foreground py-2">
             <Snowflake className="h-4 w-4" />
-            <span className="text-sm">This group has been frozen by an administrator</span>
+            <span className="text-sm">{t('chat.group_frozen')}</span>
           </div>
         ) : (
           <form onSubmit={handleSendMessage} className="flex gap-2">
             <Input
               ref={inputRef}
-              placeholder={isMuted ? "You are muted..." : "Type a message..."}
+              placeholder={isMuted ? t('chat.you_are_muted') : t('chat.type_message')}
               value={newMessage}
               onChange={handleInputChange}
               onFocus={handleInputFocus}
@@ -405,7 +409,7 @@ export default function GroupChat() {
         {isOffline && (
           <div className="flex items-center justify-center gap-2 text-destructive mt-2">
             <WifiOff className="h-4 w-4" />
-            <span className="text-xs">Offline - polling every 5s</span>
+            <span className="text-xs">{t('chat.offline')}</span>
           </div>
         )}
       </div>
