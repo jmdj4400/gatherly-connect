@@ -80,3 +80,9 @@ verify_jwt = false
 
 [functions.stripe-webhook]
 verify_jwt = false
+
+[functions.gdpr-export]
+verify_jwt = false
+
+[functions.gdpr-delete]
+verify_jwt = false
