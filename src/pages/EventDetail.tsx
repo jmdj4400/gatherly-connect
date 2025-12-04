@@ -402,8 +402,8 @@ export default function EventDetail() {
         </motion.div>
       </div>
 
-      {/* Sticky CTA */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background to-transparent">
+      {/* Sticky CTA with safe area */}
+      <div className="fixed bottom-0 left-0 right-0 p-6 sticky-bottom-bar bg-gradient-to-t from-background via-background to-transparent">
         {/* Freeze countdown */}
         {!isFrozen && !isJoined && (
           <div className="mb-3 flex justify-center">
