@@ -22,7 +22,11 @@ export function NotificationPermission({ onComplete, showSkip = true }: Notifica
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setPermission(getNotificationPermission());
+    const checkPermission = async () => {
+      const result = await getNotificationPermission();
+      setPermission(result);
+    };
+    checkPermission();
   }, []);
 
   const handleEnable = async () => {

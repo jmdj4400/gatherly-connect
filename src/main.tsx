@@ -6,6 +6,10 @@ import "./index.css";
 import { runAllTests, testJoinEventFlow, testGroupChatFlow, testAttendanceFlow, testPermissions } from "./lib/test-utils";
 import { runProductionSmokeTests } from "./lib/smoke-tests";
 import "./lib/feature-flags"; // Initialize feature flags
+import { initializeCapacitor } from "./lib/capacitor";
+
+// Initialize Capacitor on app start
+initializeCapacitor();
 
 // Make test functions available globally
 if (typeof window !== 'undefined') {
