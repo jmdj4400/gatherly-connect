@@ -1,31 +1,34 @@
 import { motion } from 'framer-motion';
 import { Sparkles, MapPin, MessageCircle, Building2 } from 'lucide-react';
 import { GlassCard } from '@/components/ui/glass-card';
-
-const features = [
-  {
-    icon: Sparkles,
-    title: 'Smart Matching',
-    description: 'Our algorithm considers interests, social energy, and preferences to create compatible groups.',
-  },
-  {
-    icon: MapPin,
-    title: "Local Events You'll Love",
-    description: 'Discover curated events happening near you, from casual meetups to unique experiences.',
-  },
-  {
-    icon: MessageCircle,
-    title: 'Simple Group Chat',
-    description: 'Coordinate with your group before the event. Share plans, make jokes, break the ice.',
-  },
-  {
-    icon: Building2,
-    title: 'Community Tools',
-    description: 'For organizers: manage events, track attendance, and grow your community with powerful tools.',
-  },
-];
+import { useTranslation } from '@/lib/i18n';
 
 export function FeaturesSection() {
+  const { t } = useTranslation();
+
+  const features = [
+    {
+      icon: Sparkles,
+      title: t('landing.features.smart_matching'),
+      description: t('landing.features.smart_matching.desc'),
+    },
+    {
+      icon: MapPin,
+      title: t('landing.features.local_events'),
+      description: t('landing.features.local_events.desc'),
+    },
+    {
+      icon: MessageCircle,
+      title: t('landing.features.group_chat'),
+      description: t('landing.features.group_chat.desc'),
+    },
+    {
+      icon: Building2,
+      title: t('landing.features.community_tools'),
+      description: t('landing.features.community_tools.desc'),
+    },
+  ];
+
   return (
     <section className="py-16 md:py-24">
       <div className="max-w-[1220px] mx-auto px-6">
@@ -37,10 +40,10 @@ export function FeaturesSection() {
           className="text-center mb-16"
         >
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
-            Everything You Need to Connect
+            {t('landing.features.title')}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Powerful features designed to make meeting people effortless
+            {t('landing.features.subtitle')}
           </p>
         </motion.div>
 

@@ -1,21 +1,24 @@
 import { motion } from 'framer-motion';
-
-const pillars = [
-  {
-    title: "Socializing shouldn't be awkward",
-    description: 'Walking into events alone can be intimidating. Gatherly eliminates that friction by giving you a built-in group.',
-  },
-  {
-    title: 'Small groups feel natural and safe',
-    description: 'Research shows people connect best in groups of 3-5. No overwhelming crowds, just meaningful conversations.',
-  },
-  {
-    title: 'Built for real life—not endless swiping',
-    description: 'Stop scrolling through profiles. Start showing up to real experiences with real people who share your interests.',
-  },
-];
+import { useTranslation } from '@/lib/i18n';
 
 export function WhyGatherlySection() {
+  const { t } = useTranslation();
+
+  const pillars = [
+    {
+      title: t('landing.why.pillar1.title'),
+      description: t('landing.why.pillar1.desc'),
+    },
+    {
+      title: t('landing.why.pillar2.title'),
+      description: t('landing.why.pillar2.desc'),
+    },
+    {
+      title: t('landing.why.pillar3.title'),
+      description: t('landing.why.pillar3.desc'),
+    },
+  ];
+
   return (
     <section className="py-16 md:py-32 bg-gradient-to-b from-background to-muted/20">
       <div className="max-w-[1220px] mx-auto px-6">
@@ -27,10 +30,10 @@ export function WhyGatherlySection() {
           className="text-center mb-16"
         >
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
-            Why Gatherly Exists
+            {t('landing.why.title')}
           </h2>
           <p className="text-lg text-muted-foreground max-w-xl mx-auto">
-            We believe making friends as an adult shouldn't be this hard
+            {t('landing.why.subtitle')}
           </p>
         </motion.div>
 
