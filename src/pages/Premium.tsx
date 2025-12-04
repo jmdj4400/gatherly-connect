@@ -11,25 +11,11 @@ import { trackAnalytics } from "@/lib/logger";
 import { toast } from "sonner";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { useTranslation } from "@/lib/i18n";
 
 const PRICE_CONFIG = {
   A: { basic: 29, plus: 49 },
   B: { basic: 39, plus: 59 },
-};
-
-const BENEFITS = {
-  basic: [
-    { icon: Zap, text: "Priority matching (10-20% boost)" },
-    { icon: Eye, text: "See who joined events" },
-    { icon: Users, text: "Larger group preferences" },
-  ],
-  plus: [
-    { icon: Zap, text: "Priority matching (10-20% boost)" },
-    { icon: Eye, text: "See who joined events" },
-    { icon: Users, text: "Larger group preferences" },
-    { icon: Sparkles, text: "Early access to new events" },
-    { icon: Crown, text: "Premium badge on profile" },
-  ],
 };
 
 export default function Premium() {
@@ -38,8 +24,24 @@ export default function Premium() {
   const { isPremium, plan, isTrialing, trialEndsAt } = useIsPremium();
   const { data: priceGroup } = usePriceGroup();
   const createCheckout = useCreateCheckout();
+  const { t, language } = useTranslation();
 
   const prices = PRICE_CONFIG[priceGroup || "A"];
+
+  const BENEFITS = {
+    basic: [
+      { icon: Zap, text: t('premium.benefit.priority') },
+      { icon: Eye, text: t('premium.benefit.see_who') },
+      { icon: Users, text: t('premium.benefit.larger_groups') },
+    ],
+    plus: [
+      { icon: Zap, text: t('premium.benefit.priority') },
+      { icon: Eye, text: t('premium.benefit.see_who') },
+      { icon: Users, text: t('premium.benefit.larger_groups') },
+      { icon: Sparkles, text: t('premium.benefit.early_access') },
+      { icon: Crown, text: t('premium.benefit.badge') },
+    ],
+  };
 
   useEffect(() => {
     trackAnalytics("premium_offered", { priceGroup, isLoggedIn: !!user });
@@ -49,16 +51,16 @@ export default function Premium() {
     if (searchParams.get("success") === "true") {
       trackAnalytics("premium_converted", { priceGroup });
       trackAnalytics("trial_started", { priceGroup });
-      toast.success("Welcome to Premium! Your 7-day trial has started.");
+      toast.success(t('premium.welcome'));
     }
     if (searchParams.get("canceled") === "true") {
-      toast.info("Checkout canceled. You can upgrade anytime.");
+      toast.info(t('premium.checkout_canceled'));
     }
-  }, [searchParams, priceGroup]);
+  }, [searchParams, priceGroup, t]);
 
   const handleUpgrade = (selectedPlan: "basic" | "plus") => {
     if (!user) {
-      toast.error("Please sign in to upgrade");
+      toast.error(t('premium.sign_in_required'));
       return;
     }
     createCheckout.mutate(selectedPlan);
@@ -70,9 +72,9 @@ export default function Premium() {
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="max-w-md">
           <CardHeader>
-            <CardTitle>Coming Soon</CardTitle>
+            <CardTitle>{t('premium.coming_soon')}</CardTitle>
             <CardDescription>
-              Premium features are not yet available. Check back soon!
+              {t('premium.not_available')}
             </CardDescription>
           </CardHeader>
         </Card>
@@ -83,8 +85,8 @@ export default function Premium() {
   return (
     <>
       <Helmet>
-        <title>Gatherly Premium - Unlock Better Matching</title>
-        <meta name="description" content="Get priority matching, see who's attending, and unlock exclusive features with Gatherly Premium." />
+        <title>Gatherly Premium - {language === 'da' ? 'Få bedre matching' : 'Unlock Better Matching'}</title>
+        <meta name="description" content={t('premium.meta')} />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 pb-24">
@@ -93,13 +95,13 @@ export default function Premium() {
           <div className="text-center mb-12">
             <Badge variant="secondary" className="mb-4">
               <Sparkles className="w-3 h-3 mr-1" />
-              7-day free trial
+              {t('premium.trial')}
             </Badge>
             <h1 className="text-3xl md:text-4xl font-bold mb-4">
-              Upgrade to <span className="text-primary">Premium</span>
+              {t('premium.title').split('Premium')[0]}<span className="text-primary">Premium</span>
             </h1>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              Get matched faster, see who's attending, and make the most of every event.
+              {t('premium.subtitle')}
             </p>
           </div>
 
@@ -111,12 +113,12 @@ export default function Premium() {
                   <Crown className="w-6 h-6 text-primary" />
                   <div>
                     <p className="font-semibold">
-                      You're on {plan === "plus" ? "Plus" : "Basic"}
-                      {isTrialing && " (Trial)"}
+                      {t('premium.youre_on')} {plan === "plus" ? "Plus" : "Basic"}
+                      {isTrialing && ` (${language === 'da' ? 'Prøveperiode' : 'Trial'})`}
                     </p>
                     {isTrialing && trialEndsAt && (
                       <p className="text-sm text-muted-foreground">
-                        Trial ends {trialEndsAt.toLocaleDateString()}
+                        {t('premium.trial_ends')} {trialEndsAt.toLocaleDateString(language === 'da' ? 'da-DK' : 'en-US')}
                       </p>
                     )}
                   </div>
@@ -131,13 +133,13 @@ export default function Premium() {
             <Card className={`relative ${plan === "basic" ? "border-primary" : ""}`}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  Basic
-                  {plan === "basic" && <Badge>Current</Badge>}
+                  {t('premium.basic')}
+                  {plan === "basic" && <Badge>{t('premium.current')}</Badge>}
                 </CardTitle>
-                <CardDescription>Essential premium features</CardDescription>
+                <CardDescription>{t('premium.basic.desc')}</CardDescription>
                 <div className="pt-2">
                   <span className="text-4xl font-bold">{prices.basic}</span>
-                  <span className="text-muted-foreground"> kr/month</span>
+                  <span className="text-muted-foreground"> kr/{language === 'da' ? 'md' : 'mo'}</span>
                 </div>
               </CardHeader>
               <CardContent>
@@ -159,7 +161,7 @@ export default function Premium() {
                   onClick={() => handleUpgrade("basic")}
                   disabled={plan === "basic" || createCheckout.isPending}
                 >
-                  {plan === "basic" ? "Current Plan" : "Start Free Trial"}
+                  {plan === "basic" ? t('premium.current_plan') : t('premium.start_trial')}
                 </Button>
               </CardFooter>
             </Card>
@@ -167,17 +169,17 @@ export default function Premium() {
             {/* Plus Plan */}
             <Card className={`relative ${plan === "plus" ? "border-primary" : "border-primary/50"}`}>
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <Badge className="bg-primary">Most Popular</Badge>
+                <Badge className="bg-primary">{t('premium.most_popular')}</Badge>
               </div>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  Plus
-                  {plan === "plus" && <Badge>Current</Badge>}
+                  {t('premium.plus')}
+                  {plan === "plus" && <Badge>{t('premium.current')}</Badge>}
                 </CardTitle>
-                <CardDescription>Everything in Basic + more</CardDescription>
+                <CardDescription>{t('premium.plus.desc')}</CardDescription>
                 <div className="pt-2">
                   <span className="text-4xl font-bold">{prices.plus}</span>
-                  <span className="text-muted-foreground"> kr/month</span>
+                  <span className="text-muted-foreground"> kr/{language === 'da' ? 'md' : 'mo'}</span>
                 </div>
               </CardHeader>
               <CardContent>
@@ -199,7 +201,7 @@ export default function Premium() {
                   onClick={() => handleUpgrade("plus")}
                   disabled={plan === "plus" || createCheckout.isPending}
                 >
-                  {plan === "plus" ? "Current Plan" : "Start Free Trial"}
+                  {plan === "plus" ? t('premium.current_plan') : t('premium.start_trial')}
                 </Button>
               </CardFooter>
             </Card>
@@ -208,7 +210,7 @@ export default function Premium() {
           {/* FAQ */}
           <div className="mt-12 text-center">
             <p className="text-sm text-muted-foreground">
-              Cancel anytime during your trial. No questions asked.
+              {t('premium.cancel_anytime')}
             </p>
           </div>
         </div>
