@@ -8,6 +8,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/lib/auth";
 import { OfflineBanner } from "@/components/pwa/OfflineBanner";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import { CookieConsent } from "@/components/cookie/CookieConsent";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
@@ -29,6 +30,7 @@ import OrganizerWidgets from "./pages/OrganizerWidgets";
 import Premium from "./pages/Premium";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
+import Cookies from "./pages/Cookies";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,6 +68,7 @@ const App = () => {
             <Toaster />
             <Sonner />
             <OfflineBanner />
+            <CookieConsent />
             {showInstallPrompt && !installPromptDismissed && (
               <InstallPrompt onDismiss={handleDismissInstall} />
             )}
@@ -94,6 +97,7 @@ const App = () => {
                 <Route path="/premium" element={<Premium />} />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />
+                <Route path="/cookies" element={<Cookies />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
