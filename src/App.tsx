@@ -68,11 +68,11 @@ const App = () => {
             <Toaster />
             <Sonner />
             <OfflineBanner />
-            <CookieConsent />
             {showInstallPrompt && !installPromptDismissed && (
               <InstallPrompt onDismiss={handleDismissInstall} />
             )}
             <BrowserRouter>
+              <CookieConsent />
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
