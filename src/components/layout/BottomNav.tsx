@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Home, Compass, Users, MessageCircle, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { hapticFeedback } from '@/lib/capacitor';
 
 const navItems = [
   { href: '/', icon: Home, label: 'Home' },
@@ -14,6 +15,10 @@ const navItems = [
 export function BottomNav() {
   const location = useLocation();
 
+  const handleNavClick = async () => {
+    await hapticFeedback.light();
+  };
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-t border-border/30">
       <div className="flex h-16 items-center justify-around px-2">
@@ -25,6 +30,7 @@ export function BottomNav() {
             <Link
               key={item.href}
               to={item.href}
+              onClick={handleNavClick}
               className="relative flex flex-col items-center justify-center gap-0.5 px-4 py-2 rounded-xl transition-all duration-200"
             >
               {isActive && (
