@@ -383,6 +383,86 @@ const translations: Record<Language, Record<string, string>> = {
     'premium.welcome': 'Velkommen til Premium! Din 7-dages prøveperiode er startet.',
     'premium.checkout_canceled': 'Checkout annulleret. Du kan opgradere når som helst.',
     'premium.sign_in_required': 'Log ind for at opgradere',
+    
+    // Premium CTA
+    'premium.member': 'Medlem',
+    'premium.trial_badge': 'Prøveperiode',
+    'premium.trial_ends_date': 'Prøveperiode slutter',
+    'premium.manage': 'Administrer',
+    'premium.upgrade': 'Opgrader til Premium',
+    'premium.upgrade_desc': 'Få prioriteret matching og se hvem der deltager',
+    'premium.try_free': 'Prøv gratis',
+    
+    // Recommended Events
+    'event.match': 'match',
+    'event.why_recommended': 'Hvorfor anbefalet:',
+    
+    // Community
+    'community.not_found': 'Fællesskab ikke fundet',
+    'community.not_found_desc': 'Dette fællesskab eksisterer ikke eller er ikke sat op endnu.',
+    'community.go_home': 'Gå til forsiden',
+    'community.feed': 'Fællesskabsfeed',
+    'community.followers': 'følgere',
+    'community.upcoming_events': 'kommende events',
+    'community.following': 'Følger',
+    'community.follow': 'Følg',
+    'community.unfollowed': 'Ikke længere følger',
+    'community.following_success': 'Følger nu! Du får notifikationer om nye events.',
+    'community.join_cta': 'Deltag alene → Bliv matchet',
+    'community.join_cta_desc': 'Har du ingen at gå med? Vi matcher dig med en gruppe!',
+    'community.find_events': 'Find events',
+    'community.upcoming': 'Kommende events',
+    'community.no_events': 'Ingen kommende events',
+    'community.next_event': 'Næste event',
+    'community.joined': 'blev medlem af fællesskabet',
+    'community.earned_badge': 'optjente',
+    'community.badge': 'badgen',
+    'community.reached_streak': 'nåede en',
+    'community.week_streak': 'ugers streak! 🔥',
+    'community.new_event': 'Nyt event:',
+    'community.no_activity': 'Ingen aktivitet endnu',
+    'community.no_upcoming': 'Ingen kommende events',
+    'community.no_streaks': 'Ingen streaks endnu. Bliv den første!',
+    'community.top_streaks': 'Top streaks',
+    'community.activity': 'Aktivitet',
+    'community.events': 'Events',
+    'community.leaderboard': 'Rangliste',
+    
+    // Not Found
+    'notfound.title': '404',
+    'notfound.message': 'Ups! Siden blev ikke fundet',
+    'notfound.back': 'Tilbage til forsiden',
+    
+    // Event Card
+    'event.today': 'I dag',
+    'event.tomorrow': 'I morgen',
+    'event.join_alone_badge': '✨ Deltag alene',
+    
+    // Install Prompt
+    'pwa.install.title': 'Installer Gatherly',
+    'pwa.install.description': 'Tilføj til din startskærm for den bedste oplevelse',
+    'pwa.install.not_now': 'Ikke nu',
+    'pwa.install.install': 'Installer',
+    'pwa.ios.instructions': 'For at installere på iOS:',
+    'pwa.ios.tap': 'Tryk',
+    'pwa.ios.then': 'og derefter "Føj til hjemmeskærm"',
+    
+    // Notification Permission
+    'notifications.not_supported': 'Notifikationer understøttes ikke',
+    'notifications.not_supported_desc': 'Din browser understøtter ikke push-notifikationer.',
+    'notifications.enabled': 'Notifikationer aktiveret!',
+    'notifications.enabled_desc': 'Du vil modtage opdateringer om dine grupper og events.',
+    'notifications.blocked': 'Notifikationer blokeret',
+    'notifications.blocked_desc': 'Du kan aktivere notifikationer senere i dine browserindstillinger.',
+    'notifications.title': 'Hold dig opdateret!',
+    'notifications.description': 'Få besked når din gruppe er klar, nye beskeder ankommer, og events snart starter.',
+    'notifications.benefit1': 'Ved når din gruppe er dannet',
+    'notifications.benefit2': 'Gå aldrig glip af en besked',
+    'notifications.benefit3': 'Event-påmindelser så du altid er til tiden',
+    'notifications.enable': 'Aktivér notifikationer',
+    'notifications.enabling': 'Aktiverer...',
+    'notifications.maybe_later': 'Måske senere',
+    'notifications.continue': 'Fortsæt',
   },
   en: {
     // Navigation & Common
@@ -758,6 +838,86 @@ const translations: Record<Language, Record<string, string>> = {
     'premium.welcome': 'Welcome to Premium! Your 7-day trial has started.',
     'premium.checkout_canceled': 'Checkout canceled. You can upgrade anytime.',
     'premium.sign_in_required': 'Please sign in to upgrade',
+    
+    // Not Found
+    'notfound.title': '404',
+    'notfound.message': 'Oops! Page not found',
+    'notfound.back': 'Return to Home',
+    
+    // Event Card
+    'event.today': 'Today',
+    'event.tomorrow': 'Tomorrow',
+    'event.join_alone_badge': '✨ Join Alone',
+    
+    // Install Prompt
+    'pwa.install.title': 'Install Gatherly',
+    'pwa.install.description': 'Add to your home screen for the best experience',
+    'pwa.install.not_now': 'Not Now',
+    'pwa.install.install': 'Install',
+    'pwa.ios.instructions': 'To install on iOS:',
+    'pwa.ios.tap': 'Tap',
+    'pwa.ios.then': 'then "Add to Home Screen"',
+    
+    // Notification Permission
+    'notifications.not_supported': 'Notifications Not Supported',
+    'notifications.not_supported_desc': "Your browser doesn't support push notifications.",
+    'notifications.enabled': 'Notifications Enabled!',
+    'notifications.enabled_desc': "You'll receive updates about your groups and events.",
+    'notifications.blocked': 'Notifications Blocked',
+    'notifications.blocked_desc': 'You can enable notifications later in your browser settings.',
+    'notifications.title': 'Stay in the Loop!',
+    'notifications.description': 'Get notified when your group is ready, new messages arrive, and events are starting soon.',
+    'notifications.benefit1': 'Know when your group is formed',
+    'notifications.benefit2': 'Never miss a message',
+    'notifications.benefit3': "Event reminders so you're always on time",
+    'notifications.enable': 'Enable Notifications',
+    'notifications.enabling': 'Enabling...',
+    'notifications.maybe_later': 'Maybe Later',
+    'notifications.continue': 'Continue',
+    
+    // Premium CTA
+    'premium.member': 'Member',
+    'premium.trial_badge': 'Trial',
+    'premium.trial_ends_date': 'Trial ends',
+    'premium.manage': 'Manage',
+    'premium.upgrade': 'Upgrade to Premium',
+    'premium.upgrade_desc': 'Get priority matching & see who joined',
+    'premium.try_free': 'Try Free',
+    
+    // Recommended Events
+    'event.match': 'match',
+    'event.why_recommended': 'Why recommended:',
+    
+    // Community
+    'community.not_found': 'Community not found',
+    'community.not_found_desc': "This community doesn't exist or hasn't been set up yet.",
+    'community.go_home': 'Go Home',
+    'community.feed': 'Community Feed',
+    'community.followers': 'followers',
+    'community.upcoming_events': 'upcoming events',
+    'community.following': 'Following',
+    'community.follow': 'Follow',
+    'community.unfollowed': 'Unfollowed community',
+    'community.following_success': 'Following community! You will get notifications for new events.',
+    'community.join_cta': 'Join Alone → Get Matched',
+    'community.join_cta_desc': "Don't have anyone to go with? We'll match you with a group!",
+    'community.find_events': 'Find Events',
+    'community.upcoming': 'Upcoming Events',
+    'community.no_events': 'No upcoming events',
+    'community.next_event': 'Next Event',
+    'community.joined': 'joined the community',
+    'community.earned_badge': 'earned the',
+    'community.badge': 'badge',
+    'community.reached_streak': 'reached a',
+    'community.week_streak': 'week streak! 🔥',
+    'community.new_event': 'New event:',
+    'community.no_activity': 'No activity yet',
+    'community.no_upcoming': 'No upcoming events',
+    'community.no_streaks': 'No streaks yet. Be the first!',
+    'community.top_streaks': 'Top Streaks',
+    'community.activity': 'Activity',
+    'community.events': 'Events',
+    'community.leaderboard': 'Leaderboard',
   },
 };
 

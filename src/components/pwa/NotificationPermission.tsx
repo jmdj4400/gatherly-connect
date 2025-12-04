@@ -10,6 +10,7 @@ import {
   subscribeToPush,
 } from '@/lib/notifications';
 import { useAuth } from '@/lib/auth';
+import { useTranslation } from '@/lib/i18n';
 
 interface NotificationPermissionProps {
   onComplete?: () => void;
@@ -18,6 +19,7 @@ interface NotificationPermissionProps {
 
 export function NotificationPermission({ onComplete, showSkip = true }: NotificationPermissionProps) {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [permission, setPermission] = useState<NotificationPermission | 'unsupported'>('default');
   const [loading, setLoading] = useState(false);
 
@@ -52,13 +54,13 @@ export function NotificationPermission({ onComplete, showSkip = true }: Notifica
         <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
           <BellOff className="h-8 w-8 text-muted-foreground" />
         </div>
-        <h3 className="font-semibold text-lg mb-2">Notifications Not Supported</h3>
+        <h3 className="font-semibold text-lg mb-2">{t('notifications.not_supported')}</h3>
         <p className="text-sm text-muted-foreground mb-6">
-          Your browser doesn't support push notifications.
+          {t('notifications.not_supported_desc')}
         </p>
         {showSkip && (
           <Button variant="outline" onClick={onComplete} className="w-full h-12">
-            Continue
+            {t('notifications.continue')}
           </Button>
         )}
       </GlassCard>
@@ -75,12 +77,12 @@ export function NotificationPermission({ onComplete, showSkip = true }: Notifica
         >
           <Check className="h-8 w-8 text-success" />
         </motion.div>
-        <h3 className="font-semibold text-lg mb-2 text-success">Notifications Enabled!</h3>
+        <h3 className="font-semibold text-lg mb-2 text-success">{t('notifications.enabled')}</h3>
         <p className="text-sm text-muted-foreground mb-6">
-          You'll receive updates about your groups and events.
+          {t('notifications.enabled_desc')}
         </p>
         <Button onClick={onComplete} variant="gradient" className="w-full h-12">
-          Continue
+          {t('notifications.continue')}
         </Button>
       </GlassCard>
     );
@@ -92,13 +94,13 @@ export function NotificationPermission({ onComplete, showSkip = true }: Notifica
         <div className="h-16 w-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
           <BellOff className="h-8 w-8 text-muted-foreground" />
         </div>
-        <h3 className="font-semibold text-lg mb-2">Notifications Blocked</h3>
+        <h3 className="font-semibold text-lg mb-2">{t('notifications.blocked')}</h3>
         <p className="text-sm text-muted-foreground mb-6">
-          You can enable notifications later in your browser settings.
+          {t('notifications.blocked_desc')}
         </p>
         {showSkip && (
           <Button variant="outline" onClick={onComplete} className="w-full h-12">
-            Continue
+            {t('notifications.continue')}
           </Button>
         )}
       </GlassCard>
@@ -116,17 +118,17 @@ export function NotificationPermission({ onComplete, showSkip = true }: Notifica
         >
           <Bell className="h-8 w-8 text-primary" />
         </motion.div>
-        <h3 className="text-xl font-semibold mb-2">Stay in the Loop!</h3>
+        <h3 className="text-xl font-semibold mb-2">{t('notifications.title')}</h3>
         <p className="text-muted-foreground">
-          Get notified when your group is ready, new messages arrive, and events are starting soon.
+          {t('notifications.description')}
         </p>
       </div>
 
       <div className="space-y-2 mb-6">
         {[
-          { icon: '👥', text: 'Know when your group is formed' },
-          { icon: '💬', text: 'Never miss a message' },
-          { icon: '⏰', text: 'Event reminders so you\'re always on time' },
+          { icon: '👥', textKey: 'notifications.benefit1' },
+          { icon: '💬', textKey: 'notifications.benefit2' },
+          { icon: '⏰', textKey: 'notifications.benefit3' },
         ].map((item, index) => (
           <motion.div
             key={index}
@@ -136,7 +138,7 @@ export function NotificationPermission({ onComplete, showSkip = true }: Notifica
             className="flex items-center gap-3 p-3.5 bg-muted/30 rounded-xl"
           >
             <span className="text-xl">{item.icon}</span>
-            <span className="text-sm font-medium">{item.text}</span>
+            <span className="text-sm font-medium">{t(item.textKey)}</span>
           </motion.div>
         ))}
       </div>
@@ -148,7 +150,7 @@ export function NotificationPermission({ onComplete, showSkip = true }: Notifica
           onClick={handleEnable}
           disabled={loading}
         >
-          {loading ? 'Enabling...' : 'Enable Notifications'}
+          {loading ? t('notifications.enabling') : t('notifications.enable')}
         </Button>
         {showSkip && (
           <Button 
@@ -156,7 +158,7 @@ export function NotificationPermission({ onComplete, showSkip = true }: Notifica
             className="w-full h-11"
             onClick={onComplete}
           >
-            Maybe Later
+            {t('notifications.maybe_later')}
           </Button>
         )}
       </div>
