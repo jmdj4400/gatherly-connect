@@ -1194,12 +1194,17 @@ export type Database = {
         Args: { _org_id: string; _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      get_user_group_ids: { Args: { _user_id: string }; Returns: string[] }
       has_role: {
         Args: {
           _org_id?: string
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_member_of_group: {
+        Args: { _group_id: string; _user_id: string }
         Returns: boolean
       }
       is_org_member: {
