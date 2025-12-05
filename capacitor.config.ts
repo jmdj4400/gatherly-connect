@@ -4,10 +4,6 @@ const config: CapacitorConfig = {
   appId: 'app.lovable.e69de0b4bdc64c90869d333dc3c5ea8a',
   appName: 'gatherlyconnect',
   webDir: 'dist',
-  server: {
-    url: 'https://e69de0b4-bdc6-4c90-869d-333dc3c5ea8a.lovableproject.com?forceHideBadge=true',
-    cleartext: true,
-  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
